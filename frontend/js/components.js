@@ -45,7 +45,7 @@ class ComponentLoader {
     }
 
     // Initialise les liens relatifs selon la page
-    initializeLinks() {
+/*    initializeLinks() {
         const isInPagesFolder = window.location.pathname.includes('/pages/');
         
         // Corriger les liens dans le header
@@ -77,6 +77,7 @@ class ComponentLoader {
             }
         });
     }
+*/
 
     // Initialise la fonctionnalité de recherche
     initializeSearch() {
@@ -165,7 +166,7 @@ class ComponentLoader {
     // Initialisation complète
     async init() {
         await this.loadBaseComponents();
-        this.initializeLinks();
+        //this.initializeLinks();
         this.initializeSearch();
         this.initializeNewsletter();
     }
