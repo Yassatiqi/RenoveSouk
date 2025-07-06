@@ -172,99 +172,113 @@ renderProductsList() {
     `;
 }
 
-    async showProductModal(productId = null) {
-        const isEditMode = productId !== null;
-        const product = isEditMode ? this.products.find(p => p.id == productId) : {};
+		async showProductModal(productId = null) {
+			const isEditMode = productId !== null;
+			const product = isEditMode ? this.products.find(p => p.id == productId) : {};
 
-        if (this.categories.length === 0) {
-            try {
-                const catResponse = await fetch(`${this.apiBaseUrl}/api/categories`);
-                this.categories = await catResponse.json();
-            } catch (e) { console.error("Erreur chargement catégories:", e); }
-        }
+			if (this.categories.length === 0) {
+				try {
+					const catResponse = await fetch(`${this.apiBaseUrl}/api/categories`);
+					this.categories = await catResponse.json();
+				} catch (e) { console.error("Erreur chargement catégories:", e); }
+			}
 
-        const categoryOptions = this.categories.map(c => 
-            `<option value="${c.id}" ${product && product.category_id == c.id ? 'selected' : ''}>${c.name}</option>`
-        ).join('');
+			const categoryOptions = this.categories.map(c => 
+				`<option value="${c.id}" ${product && product.category_id == c.id ? 'selected' : ''}>${c.name}</option>`
+			).join('');
 
-        const modalHTML = `
-            <div class="modal fade" id="productModal" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">${isEditMode ? 'Modifier le Produit' : 'Ajouter un Produit'}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="productForm" enctype="multipart/form-data">
-                                <input type="hidden" name="product_id" value="${product.id || ''}">
-                                <div class="row">
-                                    <div class="col-md-8 mb-3">
-                                        <label for="name" class="form-label">Nom *</label>
-                                        <input type="text" class="form-control" name="name" value="${product.name || ''}" required>
-                                        <label for="description" class="form-label mt-3">Description</label>
-                                        <textarea class="form-control" name="description" rows="8">${product.description || ''}</textarea>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="category_id" class="form-label">Catégorie *</label>
-                                            <select class="form-select" name="category_id" required><option value="">Sélectionner...</option>${categoryOptions}</select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="price" class="form-label">Prix *</label>
-                                            <input type="number" step="0.01" class="form-control" name="price" value="${product.price || ''}" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="stock" class="form-label">Stock *</label>
-                                            <input type="number" class="form-control" name="stock" value="${product.stock || ''}" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="image" class="form-label">Image</label>
-                                            <input type="file" class="form-control" name="image" accept="image/*">
-                                            ${isEditMode && product.image_url ? `<img src="${this.apiBaseUrl}${product.image_url}" class="img-thumbnail mt-2" width="100">` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                                <hr>
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input" type="checkbox" name="is_active" ${!isEditMode || product.is_active ? 'checked' : ''}>
-                                    <label class="form-check-label">Actif</label>
-                                </div>
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input" type="checkbox" name="is_featured" ${product.is_featured ? 'checked' : ''}>
-                                    <label class="form-check-label">En vedette</label>
-                                </div>
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input" type="checkbox" name="is_on_sale" ${product.is_on_sale ? 'checked' : ''}>
-                                    <label class="form-check-label">En promotion</label>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                            <button type="submit" form="productForm" class="btn btn-primary">Sauvegarder</button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        
-        const oldModal = document.getElementById('productModal');
-        if (oldModal) oldModal.remove();
-        
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
-        const modalElement = document.getElementById('productModal');
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
+			const modalHTML = `
+				<div class="modal fade" id="productModal" tabindex="-1">
+					<div class="modal-dialog modal-lg">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">${isEditMode ? 'Modifier le Produit' : 'Ajouter un Produit'}</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+							</div>
+							<div class="modal-body">
+								<form id="productForm" enctype="multipart/form-data">
+									<input type="hidden" name="product_id" value="${product.id || ''}">
+									<div class="row">
+										<div class="col-md-8 mb-3">
+											<label for="name" class="form-label">Nom *</label>
+											<input type="text" class="form-control" name="name" value="${product.name || ''}" required>
+											<label for="description" class="form-label mt-3">Description</label>
+											<textarea class="form-control" name="description" rows="8">${product.description || ''}</textarea>
+										</div>
+										<div class="col-md-4">
+											<div class="mb-3">
+												<label for="category_id" class="form-label">Catégorie *</label>
+												<select class="form-select" name="category_id" required><option value="">Sélectionner...</option>${categoryOptions}</select>
+											</div>
+											<div class="mb-3">
+												<label for="price" class="form-label">Prix de Vente (MAD) *</label>
+												<input type="number" step="0.01" class="form-control" name="price" value="${product.price || ''}" required>
+											</div>
+											
+											<!-- Champ "Prix Original" ajouté ici -->
+											<div class="mb-3" id="originalPriceContainer" style="display: ${product.is_on_sale ? 'block' : 'none'};">
+												<label for="original_price" class="form-label">Prix Original (barré)</label>
+												<input type="number" step="0.01" class="form-control" name="original_price" value="${product.original_price || ''}">
+											</div>
 
-        modalElement.addEventListener('hidden.bs.modal', () => modalElement.remove());
+											<div class="mb-3">
+												<label for="stock" class="form-label">Stock *</label>
+												<input type="number" class="form-control" name="stock" value="${product.stock || ''}" required>
+											</div>
+											<div class="mb-3">
+												<label for="image" class="form-label">Image</label>
+												<input type="file" class="form-control" name="image" accept="image/*">
+												${isEditMode && product.image_url ? `<img src="${this.apiBaseUrl}${product.image_url}" class="img-thumbnail mt-2" width="100">` : ''}
+											</div>
+										</div>
+									</div>
+									<hr>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" name="is_active" id="is_active_switch" ${!isEditMode || product.is_active ? 'checked' : ''}>
+										<label class="form-check-label">Actif</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" name="is_featured" ${product.is_featured ? 'checked' : ''}>
+										<label class="form-check-label">En vedette</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" name="is_on_sale" id="is_on_sale_switch" ${product.is_on_sale ? 'checked' : ''}>
+										<label class="form-check-label">En promotion</label>
+									</div>
+								</form>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+								<button type="submit" form="productForm" class="btn btn-primary">Sauvegarder</button>
+							</div>
+						</div>
+					</div>
+				</div>`;
+			
+			const oldModal = document.getElementById('productModal');
+			if (oldModal) oldModal.remove();
+			
+			document.body.insertAdjacentHTML('beforeend', modalHTML);
+			
+			const modalElement = document.getElementById('productModal');
+			const modal = new bootstrap.Modal(modalElement);
+			modal.show();
 
-        document.getElementById('productForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.saveProduct(e.target, isEditMode);
-            modal.hide();
-        });
-    }
+			// Logique pour afficher/cacher le champ de prix original
+			const saleSwitch = document.getElementById('is_on_sale_switch');
+			const originalPriceContainer = document.getElementById('originalPriceContainer');
+			saleSwitch.addEventListener('change', (e) => {
+				originalPriceContainer.style.display = e.target.checked ? 'block' : 'none';
+			});
+
+			modalElement.addEventListener('hidden.bs.modal', () => modalElement.remove());
+
+			document.getElementById('productForm').addEventListener('submit', async (e) => {
+				e.preventDefault();
+				await this.saveProduct(e.target, isEditMode);
+				modal.hide();
+			});
+		}
 
     async saveProduct(form, isEditMode) {
         const formData = new FormData(form);

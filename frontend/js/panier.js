@@ -1,5 +1,5 @@
-// Gestion de la page panier
-// Version: 1.0
+// Fichier: frontend/js/panier.js
+// Version: 1.1 - Corrigée pour la cohérence et la robustesse
 
 class CartPageManager {
     constructor() {
@@ -10,25 +10,34 @@ class CartPageManager {
         this.shippingCost = 0;
         this.total = 0;
         
+        // On s'assure que l'objet global window.cart existe
+        if (!window.cart) {
+            console.error("L'objet global 'cart' de script.js est manquant !");
+            return;
+        }
+        
         this.init();
     }
 
     async init() {
+        // Le `init` est maintenant le point d'entrée unique pour recharger la page
         await this.loadCartData();
         this.renderCart();
     }
 
-    // Charge les données du panier
+    // Charge les données du panier en utilisant l'objet global
     async loadCartData() {
         try {
-            // Récupérer les items du localStorage
-            this.cartItems = JSON.parse(localStorage.getItem('renovsoukCart')) || [];
+            // JUSTIFICATION: Utilise la méthode de l'objet global pour plus de cohérence.
+            this.cartItems = window.cart.getItems();
             
             if (this.cartItems.length === 0) {
-                return; // Panier vide
+                // Si le panier est vide, on réinitialise les détails et totaux.
+                this.productsDetails = [];
+                this.calculateTotals();
+                return;
             }
 
-            // Récupérer les détails des produits
             const productIds = this.cartItems.map(item => item.id);
             const response = await fetch(`${this.apiBaseUrl}/api/products/by-ids`, {
                 method: 'POST',
@@ -36,14 +45,14 @@ class CartPageManager {
                 body: JSON.stringify({ ids: productIds })
             });
 
-            if (!response.ok) throw new Error('Erreur lors du chargement des produits');
+            if (!response.ok) throw new Error('Erreur lors du chargement des détails des produits');
             
             this.productsDetails = await response.json();
             this.calculateTotals();
 
         } catch (error) {
             console.error('Erreur:', error);
-            this.showError('Erreur lors du chargement du panier');
+            this.showError('Erreur lors du chargement des données du panier.');
         }
     }
 
@@ -58,7 +67,6 @@ class CartPageManager {
             }
         });
 
-        // Frais de livraison (gratuit si > 500 MAD)
         this.shippingCost = this.subtotal >= 500 ? 0 : 50;
         this.total = this.subtotal + this.shippingCost;
     }
@@ -75,7 +83,6 @@ class CartPageManager {
 
         const html = `
             <div class="row">
-                <!-- Items du panier -->
                 <div class="col-lg-8">
                     <div class="cart-items bg-white rounded shadow-sm p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -84,65 +91,33 @@ class CartPageManager {
                                 <i class="fas fa-trash me-1"></i>Vider le panier
                             </button>
                         </div>
-                        
-                        <div id="cart-items-list">
-                            ${this.renderCartItems()}
-                        </div>
+                        <div id="cart-items-list">${this.renderCartItems()}</div>
                     </div>
                 </div>
-
-                <!-- Résumé de la commande -->
                 <div class="col-lg-4">
                     <div class="cart-summary p-4">
                         <h3 class="h5 fw-bold mb-4">Résumé de la commande</h3>
-                        
-                        <div class="summary-line d-flex justify-content-between mb-2">
-                            <span>Sous-total (${this.getTotalItems()} articles)</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Sous-total</span>
                             <span>${this.subtotal.toFixed(2)} MAD</span>
                         </div>
-                        
-                        <div class="summary-line d-flex justify-content-between mb-2">
-                            <span>Frais de livraison</span>
-                            <span class="${this.shippingCost === 0 ? 'text-success' : ''}">
-                                ${this.shippingCost === 0 ? 'GRATUIT' : this.shippingCost.toFixed(2) + ' MAD'}
-                            </span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Livraison</span>
+                            <span class="${this.shippingCost === 0 ? 'text-success' : ''}">${this.shippingCost === 0 ? 'GRATUIT' : this.shippingCost.toFixed(2) + ' MAD'}</span>
                         </div>
-                        
-                        ${this.subtotal < 500 && this.subtotal > 0 ? `
-                            <div class="alert alert-info small mt-3">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Ajoutez ${(500 - this.subtotal).toFixed(2)} MAD pour bénéficier de la livraison gratuite !
-                            </div>
-                        ` : ''}
-                        
+                        ${this.subtotal < 500 && this.subtotal > 0 ? `<div class="alert alert-info small mt-3"><i class="fas fa-info-circle me-1"></i>Ajoutez ${(500 - this.subtotal).toFixed(2)} MAD pour la livraison gratuite !</div>` : ''}
                         <hr>
-                        
-                        <div class="summary-total d-flex justify-content-between mb-4">
-                            <strong>Total</strong>
-                            <strong class="text-primary h5">${this.total.toFixed(2)} MAD</strong>
+                        <div class="d-flex justify-content-between fw-bold h5 mb-4">
+                            <span>Total</span>
+                            <strong class="text-primary">${this.total.toFixed(2)} MAD</strong>
                         </div>
-                        
                         <div class="d-grid gap-2">
-                            <a href="checkout.html" class="btn btn-primary btn-lg">
-                                <i class="fas fa-credit-card me-2"></i>Passer la commande
-                            </a>
-                            <a href="boutique.html" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Continuer mes achats
-                            </a>
-                        </div>
-                        
-                        <!-- Informations de sécurité -->
-                        <div class="security-info mt-4 text-center">
-                            <small class="text-muted">
-                                <i class="fas fa-shield-alt text-success me-1"></i>
-                                Paiement sécurisé
-                            </small>
+                            <a href="checkout.html" class="btn btn-primary btn-lg"><i class="fas fa-credit-card me-2"></i>Passer la commande</a>
+                            <a href="/pages/boutique.html" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Continuer mes achats</a>
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
-
+            </div>`;
         container.innerHTML = html;
     }
 
@@ -155,170 +130,94 @@ class CartPageManager {
             const imageUrl = (productDetail.image_url && productDetail.image_url.startsWith('/static/')) 
                 ? `${this.apiBaseUrl}${productDetail.image_url}` 
                 : (productDetail.image_url || '../assets/images/placeholder.jpg');
-
             const itemTotal = productDetail.price * cartItem.quantity;
 
             return `
                 <div class="cart-item-row" data-product-id="${productDetail.id}">
-                    <div class="row align-items-center">
-                        <!-- Image du produit -->
+                    <div class="row align-items-center py-3 border-bottom">
                         <div class="col-md-2 col-3">
-                            <img src="${imageUrl}" alt="${productDetail.name}" 
-                                 class="cart-item-image img-fluid"
-                                 onerror="this.onerror=null;this.src='../assets/images/placeholder.jpg';">
+                            <img src="${imageUrl}" alt="${productDetail.name}" class="cart-item-image img-fluid" onerror="this.onerror=null;this.src='../assets/images/placeholder.jpg';">
                         </div>
-                        
-                        <!-- Informations du produit -->
                         <div class="col-md-4 col-9">
-                            <h6 class="fw-bold mb-1">
-                                <a href="produit.html?id=${productDetail.id}" class="text-decoration-none">
-                                    ${productDetail.name}
-                                </a>
-                            </h6>
-                            <p class="text-muted small mb-1">
-                                ${productDetail.short_description || ''}
-                            </p>
-                            <span class="badge bg-${productDetail.stock > 0 ? 'success' : 'danger'}">
-                                ${productDetail.stock > 0 ? 'En stock' : 'Rupture'}
-                            </span>
+                            <a href="/pages/produit.html?id=${productDetail.id}" class="text-decoration-none fw-bold">${productDetail.name}</a>
+                            <p class="text-muted small mb-0">Réf: ${productDetail.sku || 'N/A'}</p>
                         </div>
-                        
-                        <!-- Prix unitaire -->
-                        <div class="col-md-2 col-6 text-center">
-                            <span class="fw-bold">${productDetail.price.toFixed(2)} MAD</span>
-                        </div>
-                        
-                        <!-- Quantité -->
-                        <div class="col-md-2 col-6">
-                            <div class="input-group quantity-input">
-                                <button class="btn btn-outline-secondary btn-sm" type="button" 
-                                        onclick="cartPage.updateQuantity(${productDetail.id}, ${cartItem.quantity - 1})">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                                <input type="number" class="form-control form-control-sm text-center" 
-                                       value="${cartItem.quantity}" min="1" max="${productDetail.stock}"
-                                       onchange="cartPage.updateQuantity(${productDetail.id}, this.value)">
-                                <button class="btn btn-outline-secondary btn-sm" type="button" 
-                                        onclick="cartPage.updateQuantity(${productDetail.id}, ${cartItem.quantity + 1})">
-                                    <i class="fas fa-plus"></i>
-                                </button>
+                        <div class="col-md-3 col-6 mt-2 mt-md-0">
+                            <div class="input-group quantity-input mx-auto" style="max-width: 120px;">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="cartPage.updateQuantity(${productDetail.id}, ${cartItem.quantity - 1})"><i class="fas fa-minus"></i></button>
+                                <!-- JUSTIFICATION: L'input est readonly pour forcer l'utilisation des boutons, et affiche la quantité correcte. -->
+                                <input type="text" class="form-control form-control-sm text-center" value="${cartItem.quantity}" readonly>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="cartPage.updateQuantity(${productDetail.id}, ${cartItem.quantity + 1})"><i class="fas fa-plus"></i></button>
                             </div>
                         </div>
-                        
-                        <!-- Total de la ligne -->
-                        <div class="col-md-1 col-6 text-center">
-                            <span class="fw-bold text-primary">${itemTotal.toFixed(2)} MAD</span>
+                        <div class="col-md-1 col-3 mt-2 mt-md-0 text-center fw-bold">
+                            <span>${itemTotal.toFixed(2)}</span>
                         </div>
-                        
-                        <!-- Bouton supprimer -->
-                        <div class="col-md-1 col-6 text-center">
-                            <button class="btn btn-outline-danger btn-sm" 
-                                    onclick="cartPage.removeItem(${productDetail.id})"
-                                    title="Supprimer cet article">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="col-md-2 col-3 mt-2 mt-md-0 text-end">
+                            <button class="btn btn-outline-danger btn-sm" onclick="cartPage.removeItem(${productDetail.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
     // Affiche un panier vide
     renderEmptyCart() {
         const container = document.getElementById('cart-container');
-        if (!container) return;
-
         container.innerHTML = `
             <div class="row">
                 <div class="col-12">
-                    <div class="empty-cart d-flex flex-column align-items-center justify-content-center text-center">
+                    <div class="empty-cart d-flex flex-column align-items-center justify-content-center text-center py-5">
                         <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
                         <h3 class="fw-bold mb-3">Votre panier est vide</h3>
                         <p class="text-muted mb-4">Découvrez nos produits et ajoutez-les à votre panier</p>
-                        <a href="boutique.html" class="btn btn-primary btn-lg">
-                            <i class="fas fa-store me-2"></i>Découvrir nos produits
-                        </a>
+                        <a href="/pages/boutique.html" class="btn btn-primary btn-lg"><i class="fas fa-store me-2"></i>Découvrir nos produits</a>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
     // Met à jour la quantité d'un produit
     updateQuantity(productId, newQuantity) {
-        const quantity = parseInt(newQuantity);
-        
-        if (quantity <= 0) {
+        if (newQuantity <= 0) {
             this.removeItem(productId);
             return;
         }
 
-        // Vérifier le stock disponible
         const productDetail = this.productsDetails.find(p => p.id === productId);
-        if (productDetail && quantity > productDetail.stock) {
-            this.showNotification(`Stock insuffisant. Maximum disponible: ${productDetail.stock}`, 'warning');
+        if (productDetail && newQuantity > productDetail.stock) {
+            window.cart.showNotification(`Stock insuffisant. Maximum disponible: ${productDetail.stock}`, 'warning');
             return;
         }
-
-        // Mettre à jour le localStorage
-        const cartItems = JSON.parse(localStorage.getItem('renovsoukCart')) || [];
-        const itemIndex = cartItems.findIndex(item => item.id === productId);
         
-        if (itemIndex !== -1) {
-            cartItems[itemIndex].quantity = quantity;
-            localStorage.setItem('renovsoukCart', JSON.stringify(cartItems));
-            
-            // Recharger et réafficher
-            this.cartItems = cartItems;
-            this.calculateTotals();
-            this.renderCart();
-            
-            // Mettre à jour l'affichage global du panier
-            if (window.cart) {
-                window.cart.updateDisplay();
-            }
-            
-            this.showNotification('Quantité mise à jour', 'success');
+        const items = window.cart.getItems();
+        const itemIndex = items.findIndex(item => item.id === productId);
+        if (itemIndex > -1) {
+            items[itemIndex].quantity = newQuantity;
+            window.cart.saveItems(items);
+            // JUSTIFICATION: Appeler init() est plus simple et fiable que de tout recalculer manuellement.
+            this.init(); 
+            // JUSTIFICATION: Mettre à jour le panier du header pour la cohérence.
+            window.cart.updateDisplay();
         }
     }
 
     // Supprime un produit du panier
     removeItem(productId) {
-        const cartItems = JSON.parse(localStorage.getItem('renovsoukCart')) || [];
-        const updatedItems = cartItems.filter(item => item.id !== productId);
-        
-        localStorage.setItem('renovsoukCart', JSON.stringify(updatedItems));
-        
-        // Recharger et réafficher
-        this.cartItems = updatedItems;
-        this.productsDetails = this.productsDetails.filter(p => p.id !== productId);
-        this.calculateTotals();
-        this.renderCart();
-        
-        // Mettre à jour l'affichage global du panier
-        if (window.cart) {
-            window.cart.updateDisplay();
-        }
-        
-        this.showNotification('Produit supprimé du panier', 'success');
+        const items = window.cart.getItems().filter(item => item.id !== productId);
+        window.cart.saveItems(items);
+        this.init(); 
+        window.cart.updateDisplay();
+        window.cart.showNotification('Produit supprimé du panier', 'success');
     }
 
     // Vide complètement le panier
     clearCart() {
         if (confirm('Êtes-vous sûr de vouloir vider votre panier ?')) {
-            localStorage.removeItem('renovsoukCart');
-            this.cartItems = [];
-            this.productsDetails = [];
-            this.calculateTotals();
-            this.renderCart();
-            
-            // Mettre à jour l'affichage global du panier
-            if (window.cart) {
-                window.cart.updateDisplay();
-            }
-            
-            this.showNotification('Panier vidé', 'success');
+            window.cart.saveItems([]);
+            this.init(); 
+            window.cart.updateDisplay();
+            window.cart.showNotification('Panier vidé', 'success');
         }
     }
 
@@ -331,31 +230,7 @@ class CartPageManager {
     showError(message) {
         const container = document.getElementById('cart-container');
         if (!container) return;
-
-        container.innerHTML = `
-            <div class="row">
-                <div class="col-12 text-center py-5">
-                    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-                    <h3>Erreur</h3>
-                    <p class="text-muted">${message}</p>
-                    <button class="btn btn-primary" onclick="location.reload()">Réessayer</button>
-                </div>
-            </div>
-        `;
-    }
-
-    // Affiche une notification
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} position-fixed`;
-        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
-        notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
-        `;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 5000);
+        container.innerHTML = `<div class="alert alert-danger">${message}</div>`;
     }
 }
 
@@ -364,4 +239,3 @@ let cartPage;
 document.addEventListener('DOMContentLoaded', () => {
     cartPage = new CartPageManager();
 });
-

@@ -232,11 +232,16 @@ def create_product():
         image_url = f"/static/uploads/{filename}"
     
     try:
+        # Récupérer la valeur, la convertir en float si elle existe, sinon None
+        original_price_str = data.get('original_price')
+        original_price = float(original_price_str) if original_price_str else None
+
         product = Product(
             name=data.get('name'),
             slug=create_slug(data.get('name')),
             description=data.get('description'),
             price=float(data.get('price')),
+            original_price=original_price,
             stock=int(data.get('stock')),
             category_id=int(data.get('category_id')) if data.get('category_id') else None,
             is_active='is_active' in data,
@@ -254,8 +259,13 @@ def create_product():
 def admin_update_product(product_id):
     """Met à jour un produit existant (route admin)"""
     try:
+        
         product = Product.query.get_or_404(product_id)
         data = request.form
+        
+        # Récupérer la valeur, la convertir en float si elle existe, sinon None
+        original_price_str = data.get('original_price')
+        product.original_price = float(original_price_str) if original_price_str else None
 
         product.name = data.get('name', product.name)
         product.slug = create_slug(data.get('name', product.name))
