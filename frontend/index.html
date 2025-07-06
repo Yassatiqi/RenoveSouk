@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RenovSouk - Votre souk digital pour tous vos projets de rénovation</title>
+    <meta name="description" content="RenovSouk - Le spécialiste de la rénovation au Maroc. Outillage, matériaux de construction, électricité, plomberie et décoration.">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header Placeholder -->
+    <div id="header-placeholder"></div>
+
+    <!-- Hero Carousel -->
+    <section class="hero-carousel">
+        <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+            </div>
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="hero-slide bg-gradient-primary d-flex align-items-center" style="height: 400px;">
+                        <div class="container">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6">
+                                    <h1 class="display-4 text-white fw-bold mb-4">
+                                        Outillage Professionnel
+                                    </h1>
+                                    <p class="lead text-white mb-4">
+                                        Découvrez notre gamme complète d'outils professionnels pour tous vos projets de rénovation
+                                    </p>
+                                    <a href="pages/boutique.html?category=outillage" class="btn btn-warning btn-lg">
+                                        Découvrir
+                                    </a>
+                                </div>
+                                <div class="col-lg-6">
+                                    <img src="assets/images/outils-kit-perceuse.jpg" alt="Outillage" class="img-fluid rounded">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="hero-slide bg-gradient-success d-flex align-items-center" style="height: 400px;">
+                        <div class="container">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6">
+                                    <h1 class="display-4 text-white fw-bold mb-4">
+                                        Matériaux de Construction
+                                    </h1>
+                                    <p class="lead text-white mb-4">
+                                        Ciment, briques, parpaings - Tout pour vos fondations et structures
+                                    </p>
+                                    <a href="pages/boutique.html?category=materiaux" class="btn btn-warning btn-lg">
+                                        Voir maintenant
+                                    </a>
+                                </div>
+                                <div class="col-lg-6">
+                                    <img src="assets/images/briques-parpaings.jpg" alt="Matériaux" class="img-fluid rounded">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="hero-slide bg-gradient-info d-flex align-items-center" style="height: 400px;">
+                        <div class="container">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6">
+                                    <h1 class="display-4 text-white fw-bold mb-4">
+                                        Électricité & Éclairage
+                                    </h1>
+                                    <p class="lead text-white mb-4">
+                                        Solutions complètes pour vos installations électriques et d'éclairage
+                                    </p>
+                                    <a href="pages/boutique.html?category=electricite" class="btn btn-warning btn-lg">
+                                        Explorer
+                                    </a>
+                                </div>
+                                <div class="col-lg-6">
+                                    <img src="assets/images/electricite-cables.jpg" alt="Électricité" class="img-fluid rounded">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Promotional Banners -->
+    <section class="promotional-banners py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="promo-card bg-warning text-dark p-4 rounded">
+                        <h4 class="fw-bold">Livraison Gratuite</h4>
+                        <p class="mb-3">Sur toutes commandes de plus de 500 MAD</p>
+                        <a href="pages/boutique.html" class="btn btn-dark">Commander maintenant</a>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="promo-card bg-info text-white p-4 rounded">
+                        <h4 class="fw-bold">Garantie 2 ans</h4>
+                        <p class="mb-3">Sur tous nos outils électriques</p>
+                        <a href="pages/boutique.html?category=outillage" class="btn btn-light">Voir les outils</a>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="promo-card bg-success text-white p-4 rounded">
+                        <h4 class="fw-bold">Conseil Expert</h4>
+                        <p class="mb-3">Nos experts vous accompagnent</p>
+                        <a href="pages/contact.html" class="btn btn-light">Nous contacter</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Sections -->
+    <section class="products-sections py-5">
+        <div class="container">
+            <!-- Section Navigation -->
+            <div class="text-center mb-5">
+                <h2 class="fw-bold mb-4">Nos Produits</h2>
+                <ul class="nav nav-pills justify-content-center" id="productTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="featured-tab" data-bs-toggle="pill" data-bs-target="#featured" type="button" role="tab">
+                            <i class="fas fa-star me-2"></i>En Vedette
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="new-tab" data-bs-toggle="pill" data-bs-target="#new" type="button" role="tab">
+                            <i class="fas fa-sparkles me-2"></i>Nouveautés
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="sale-tab" data-bs-toggle="pill" data-bs-target="#sale" type="button" role="tab">
+                            <i class="fas fa-percentage me-2"></i>En Promotion
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="productTabsContent">
+                <!-- Onglet En Vedette -->
+                <div class="tab-pane fade show active" id="featured" role="tabpanel">
+                    <div class="row g-4" id="featured-products-container">
+                        <div class="col-12 text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Onglet Nouveautés -->
+                <div class="tab-pane fade" id="new" role="tabpanel">
+                    <div class="row g-4" id="new-products-container">
+                        <div class="col-12 text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Onglet En Promotion -->
+                <div class="tab-pane fade" id="sale" role="tabpanel">
+                    <div class="row g-4" id="sale-products-container">
+                        <div class="col-12 text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voir Plus Button -->
+            <div class="text-center mt-5">
+                <a href="pages/boutique.html" class="btn btn-primary btn-lg">
+                    <i class="fas fa-store me-2"></i>Voir tous nos produits
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Components JS -->
+    <script src="js/components.js"></script>
+    <!-- Custom JS -->
+    <script src="js/script.js"></script>
+</body>
+</html>
+
