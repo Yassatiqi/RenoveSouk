@@ -397,6 +397,7 @@ class CheckoutManager {
 
         } catch (error) {
             console.error('Erreur:', error);
+			alert('Une erreur est survenue. Vérifiez la console pour les détails. Message : ' + error.message);
             this.showNotification(error.message, 'danger');
             
             // Réactiver le bouton

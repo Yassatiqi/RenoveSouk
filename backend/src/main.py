@@ -190,11 +190,86 @@ def get_products_by_ids():
 
 @app.route('/api/orders', methods=['POST'])
 def create_order():
-    # ... (le code de création de commande reste le même) ...
+    """Crée une nouvelle commande à partir des données du checkout."""
     data = request.get_json()
-    # ...
-    return jsonify({'success': True, 'message': 'Commande créée.', 'order': {'order_number': '...'} }), 201
+    
+    # Validation basique des données
+    required_fields = ['shipping_first_name', 'shipping_last_name', 'shipping_phone', 'shipping_email', 'shipping_address', 'shipping_city', 'items']
+    if not all(field in data for field in required_fields) or not data['items']:
+        return jsonify({'success': False, 'message': 'Données de commande incomplètes.'}), 400
 
+    try:
+        # Création de l'objet Order
+        order = Order(
+            order_number=generate_order_number(),
+            shipping_first_name=data['shipping_first_name'],
+            shipping_last_name=data['shipping_last_name'],
+            shipping_phone=data['shipping_phone'],
+            shipping_email=data['shipping_email'],
+            shipping_address=data['shipping_address'],
+            shipping_city=data['shipping_city'],
+            shipping_postal_code=data.get('shipping_postal_code', ''),
+            payment_method=data.get('payment_method', 'cod'),
+            notes=data.get('notes', ''),
+            guest_email=data['shipping_email']
+        )
+        
+
+        subtotal = 0.0
+        product_ids = [item['id'] for item in data['items']]
+        products_in_db = Product.query.filter(Product.id.in_(product_ids)).all()
+        products_map = {p.id: p for p in products_in_db}
+
+        # Création des OrderItems
+        for item_data in data['items']:
+            product = products_map.get(item_data['id'])
+            quantity = item_data['quantity']
+            
+            if not product or not product.is_active or product.stock < quantity:
+                # Si un produit n'est pas valide, on annule toute la transaction
+                raise Exception(f"Produit ID {item_data['id']} invalide ou stock insuffisant.")
+
+            unit_price = product.price
+            total_price = unit_price * quantity
+            
+            order_item = OrderItem(
+                product_id=product.id,
+                product_name=product.name,
+                product_sku=product.sku,
+                unit_price=unit_price,
+                quantity=quantity,
+                total_price=total_price
+            )
+            order.items.append(order_item)
+            subtotal += total_price
+            
+            # Décrémenter le stock
+            product.stock -= quantity
+
+        # Calcul final des totaux (côté serveur, pour la sécurité)
+        order.subtotal = subtotal
+        order.shipping_cost = 0.0 if subtotal >= 500 else 50.0
+        order.tax_amount = 0.0  # Pas de taxe pour l'instant
+        order.total_amount = order.subtotal + order.shipping_cost + order.tax_amount
+        
+        db.session.add(order)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Commande créée avec succès.',
+            'order': order.to_dict(include_items=True)
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erreur lors de la création de la commande : {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Erreur interne du serveur lors de la création de la commande.'
+        }), 500
+      
+        
 @app.route('/api/orders/<order_number>', methods=['GET'])
 def get_order_by_number(order_number):
     order = Order.query.filter_by(order_number=order_number).first_or_404()
@@ -204,6 +279,17 @@ def get_order_by_number(order_number):
 # --- ROUTES API ADMIN (CRUD Produits, Stats, etc.) ---
 # ==============================================================================
 
+@app.route('/api/admin/orders', methods=['GET'])
+def admin_get_orders():
+    """Récupère toutes les commandes pour le panel admin."""
+    try:
+        orders = Order.query.order_by(Order.created_at.desc()).all()
+        orders_data = [o.to_dict(include_items=True) for o in orders]
+        return jsonify({'success': True, 'orders': orders_data})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+       
+       
 @app.route('/api/admin/products', methods=['GET'])
 def admin_get_all_products():
     """Récupère TOUS les produits pour le panel admin (actifs et inactifs)"""
@@ -255,6 +341,7 @@ def create_product():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Erreur: {str(e)}'}), 500
+
 @app.route('/api/admin/products/<int:product_id>', methods=['PUT'])
 def admin_update_product(product_id):
     """Met à jour un produit existant (route admin)"""
@@ -319,7 +406,8 @@ def admin_toggle_product_status(product_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
-        
+
+ 
 @app.route('/api/admin/stats')
 def admin_stats():
     # ... (le code des statistiques reste le même) ...
