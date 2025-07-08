@@ -413,11 +413,34 @@ def admin_stats():
     # ... (le code des statistiques reste le même) ...
     return jsonify({'total_orders': 0, 'total_products': 0, 'total_customers': 0})
 
-@app.route('/api/orders/<order_number>/status', methods=['PUT'])
-def update_order_status(order_number):
-    # ... (le code de mise à jour du statut reste le même) ...
-    return jsonify({'message': 'Statut mis à jour.'})
+@app.route('/api/admin/orders/<int:order_id>/status', methods=['PATCH'])
+def admin_update_order_status(order_id):
+    """Met à jour le statut d'une commande par son ID."""
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
+        
+        if not new_status:
+            return jsonify({'success': False, 'message': 'Nouveau statut manquant'}), 400
 
+        order = Order.query.get_or_404(order_id)
+        order.status = new_status
+        order.updated_at = datetime.utcnow() # Mettre à jour la date de modification
+        
+        db.session.commit()
+        
+        # TODO: Envoyer un email de notification au client ici (étape future)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Statut de la commande mis à jour avec succès.',
+            'order': order.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+        
 # ==============================================================================
 # --- GESTION DES ERREURS ET LANCEMENT DE L'APP ---
 # ==============================================================================

@@ -17,39 +17,59 @@ class AdminPanel {
         this.showSection('products'); 
     }
 
-    // Configure les écouteurs d'événements
-    setupEventListeners() {
-        // Navigation dans la sidebar
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const section = e.target.closest('.nav-link').dataset.section;
-                if (section) this.showSection(section);
-            });
-        });
+	// Configure les écouteurs d'événements
+	setupEventListeners() {
+		// Navigation dans la sidebar
+		document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+			link.addEventListener('click', (e) => {
+				e.preventDefault();
+				const section = e.target.closest('.nav-link').dataset.section;
+				if (section) this.showSection(section);
+			});
+		});
 
-        // Utiliser la délégation d'événements pour les boutons d'action (plus robuste)
-        document.getElementById('content-area').addEventListener('click', (e) => {
+		const contentArea = document.getElementById('content-area');
+		if (!contentArea) return; // Sécurité au cas où l'élément n'existerait pas
+
+		// 1. ÉCOUTEUR POUR LES "CLICS" (votre code original)
+		contentArea.addEventListener('click', (e) => {
 			const button = e.target.closest('button');
 			if (!button) return;
 
-            if (button.classList.contains('btn-add-product')) {
-                this.showProductModal(); // Pas d'ID = mode ajout
-            }
-            if (button.classList.contains('btn-edit')) {
-                const productId = button.dataset.id;
-                this.showProductModal(productId);
-            }
-            if (button.classList.contains('btn-delete')) {
-                const productId = button.dataset.id;
-                this.deleteProduct(productId);
-            }
+			if (button.classList.contains('btn-add-product')) {
+				this.showProductModal();
+			}
+			if (button.classList.contains('btn-edit')) {
+				const productId = button.dataset.id;
+				this.showProductModal(productId);
+			}
+			if (button.classList.contains('btn-delete')) {
+				const productId = button.dataset.id;
+				this.deleteProduct(productId);
+			}
 			if (button.classList.contains('btn-toggle-status')) {
 				const productId = button.dataset.id;
 				this.toggleProductStatus(productId);
 			}
-        });
-    }
+			if (button.classList.contains('btn-view-order')) {
+				const orderId = button.dataset.orderId;
+				const order = this.orders.find(o => o.id == orderId);
+				if (order) {
+					this.showOrderDetailsModal(order);
+				}
+			}
+		});
+
+		// 2. ÉCOUTEUR POUR LES "CHANGEMENTS" (ajouté pour les menus de statut)
+		contentArea.addEventListener('change', (e) => {
+			// On cible spécifiquement les éléments <select> qui ont la classe 'status-select'
+			if (e.target.tagName === 'SELECT' && e.target.classList.contains('status-select')) {
+				const orderId = e.target.dataset.orderId;
+				const newStatus = e.target.value;
+				this.updateOrderStatus(orderId, newStatus);
+			}
+		});
+	}
     
     // Affiche une section
     async showSection(section) {
@@ -354,6 +374,7 @@ class AdminPanel {
 			if (!response.ok) throw new Error('Réponse du serveur non valide');
 			const data = await response.json();
 			if (data.success) {
+				this.orders = data.orders || []; // Stocker les commandes
 				this.renderOrdersList(data.orders || []);
 			} else {
 				throw new Error(data.message);
@@ -366,16 +387,29 @@ class AdminPanel {
 
 	renderOrdersList(orders) {
 		const contentArea = document.getElementById('content-area');
-		const tableRows = orders.map(order => {
+		const tableRows = orders.map(order => {	
 			const orderDate = new Date(order.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+			
+			const statuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+			const statusOptions = statuses.map(s => 
+				`<option value="${s}" ${order.status === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+			).join('');
+
 			return `
 				<tr>
 					<td><strong>${order.order_number}</strong></td>
 					<td>${order.shipping_first_name} ${order.shipping_last_name}</td>
 					<td>${order.total_amount.toFixed(2)} MAD</td>
-					<td><span class="badge bg-warning text-dark">${order.status}</span></td>
+					
+					<!-- Colonne du statut modifiée -->
+					<td>
+						<select class="form-select form-select-sm status-select" data-order-id="${order.id}">
+							${statusOptions}
+						</select>
+					</td>
+
 					<td>${orderDate}</td>
-					<td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye me-1"></i>Détails</button></td>
+					<td><button class="btn btn-sm btn-outline-primary btn-view-order" data-order-id="${order.id}"><i class="fas fa-eye me-1"></i>Détails</button></td>
 				</tr>
 			`;
 		}).join('');
@@ -403,7 +437,105 @@ class AdminPanel {
 			</div>
 		`;
 	}
-    // Affiche une notification
+	
+	showOrderDetailsModal(order) {
+		const orderDate = new Date(order.created_at).toLocaleString('fr-FR');
+		const itemsHTML = order.items.map(item => `
+			<tr>
+				<td>${item.product_name}</td>
+				<td>${item.quantity}</td>
+				<td>${item.unit_price.toFixed(2)} MAD</td>
+				<td class="text-end">${item.total_price.toFixed(2)} MAD</td>
+			</tr>
+		`).join('');
+
+		const modalHTML = `
+			<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+			  <div class="modal-dialog modal-xl">
+				<div class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title">Détails de la commande: ${order.order_number}</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				  </div>
+				  <div class="modal-body">
+					<div class="row">
+						<div class="col-md-6">
+							<h6>Informations Client</h6>
+							<p>
+								<strong>${order.shipping_first_name} ${order.shipping_last_name}</strong><br>
+								${order.shipping_address}<br>
+								${order.shipping_city}, ${order.shipping_postal_code}<br>
+								Email: ${order.shipping_email}<br>
+								Tél: ${order.shipping_phone}
+							</p>
+						</div>
+						<div class="col-md-6">
+							<h6>Informations Commande</h6>
+							<p>
+								<strong>Date:</strong> ${orderDate}<br>
+								<strong>Statut:</strong> <span class="badge bg-warning">${order.status}</span><br>
+								<strong>Paiement:</strong> ${order.payment_method}
+							</p>
+						</div>
+					</div>
+					<hr>
+					<h6>Articles Commandés</h6>
+					<div class="table-responsive">
+						<table class="table table-sm">
+							<thead><tr><th>Produit</th><th>Qté</th><th>Prix Unit.</th><th class="text-end">Total</th></tr></thead>
+							<tbody>${itemsHTML}</tbody>
+						</table>
+					</div>
+					<hr>
+					<div class="row justify-content-end text-end">
+						<div class="col-md-4">
+							<p>Sous-total: <strong>${order.subtotal.toFixed(2)} MAD</strong></p>
+							<p>Livraison: <strong>${order.shipping_cost.toFixed(2)} MAD</strong></p>
+							<h5>Total: <strong>${order.total_amount.toFixed(2)} MAD</strong></h5>
+						</div>
+					</div>
+				  </div>
+				</div>
+			  </div>
+			</div>
+		`;
+
+		const oldModal = document.getElementById('orderDetailsModal');
+		if (oldModal) oldModal.remove();
+		document.body.insertAdjacentHTML('beforeend', modalHTML);
+		const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+		modal.show();
+	}
+    
+	async updateOrderStatus(orderId, newStatus) {
+		try {
+			const response = await fetch(`${this.apiBaseUrl}/api/admin/orders/${orderId}/status`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ status: newStatus }),
+			});
+
+			const result = await response.json();
+
+			if (result.success) {
+				this.showNotification(result.message, 'success');
+				// Mettre à jour les données locales et réafficher la liste
+				const index = this.orders.findIndex(o => o.id == orderId);
+				if (index !== -1) {
+					this.orders[index].status = newStatus;
+					this.renderOrdersList(this.orders);
+				}
+			} else {
+				throw new Error(result.message);
+			}
+		} catch (error) {
+			console.error('Erreur mise à jour statut:', error);
+			this.showNotification(`Erreur: ${error.message}`, 'danger');
+		}
+	}
+	// Affiche une notification
     showNotification(message, type = 'success') {
         const alertContainer = document.createElement('div');
         alertContainer.style.position = 'fixed';
