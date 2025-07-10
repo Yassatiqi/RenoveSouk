@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 # Import des modèles
 from models.ecommerce import db, Category, Product, User, Order, OrderItem, Banner
@@ -140,20 +140,70 @@ def get_categories():
 def get_products():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 12, type=int)
-    # ... (toute la logique de filtrage et pagination reste la même) ...
+    
+    # On commence la requête de base
     query = Product.query.filter_by(is_active=True)
-    # Filtres
+    
+    # 1. Filtre par catégorie (déjà existant)
     category_slug = request.args.get('category')
     if category_slug:
         cat = Category.query.filter_by(slug=category_slug).first()
         if cat:
             query = query.filter_by(category_id=cat.id)
-    
-    # ... autres filtres ...
+
+    # 2. Filtre par prix
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
+    if min_price is not None:
+        query = query.filter(Product.price >= min_price)
+    if max_price is not None:
+        query = query.filter(Product.price <= max_price)
+
+    # 3. Filtres booléens (on vérifie si la valeur est 'true')
+    if request.args.get('on_sale') == 'true':
+        query = query.filter_by(is_on_sale=True)
+    if request.args.get('is_new') == 'true':
+        query = query.filter_by(is_new=True)
+    if request.args.get('featured') == 'true':
+        query = query.filter_by(is_featured=True)
+    if request.args.get('in_stock') == 'true':
+        query = query.filter(Product.stock > 0)
+         
+    # 4. Filtre de recherche (depuis la barre de recherche du header)
+    search_query = request.args.get('search')
+    if search_query:
+        query = query.filter(or_(Product.name.ilike(f'%{search_query}%'), Product.description.ilike(f'%{search_query}%')))
+
+    # 5. Logique de tri
+    sort_by = request.args.get('sort_by', 'name_asc')
+    if sort_by == 'price_asc':
+        query = query.order_by(Product.price.asc())
+    elif sort_by == 'price_desc':
+        query = query.order_by(Product.price.desc())
+    elif sort_by == 'name_desc':
+        query = query.order_by(func.lower(Product.name).desc())
+    elif sort_by == 'newest':
+        query = query.order_by(Product.created_at.desc())
+    elif sort_by == 'featured':
+        query = query.order_by(Product.is_featured.desc(), Product.created_at.desc())
+    else: # name_asc par défaut
+        query = query.order_by(func.lower(Product.name).asc())
+
+    # Pagination finale
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Retour de la réponse JSON
     return jsonify({
         'products': [p.to_dict() for p in pagination.items],
-        'pagination': {'total': pagination.total, 'pages': pagination.pages, 'page': page}
+        'pagination': {
+            'total': pagination.total, 
+            'pages': pagination.pages, 
+            'page': page,
+            'has_prev': pagination.has_prev,
+            'has_next': pagination.has_next,
+            'prev_num': pagination.prev_num,
+            'next_num': pagination.next_num
+        }
     })
 
 @app.route('/api/products/<int:product_id>', methods=['GET'])

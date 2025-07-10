@@ -12,6 +12,13 @@ class BoutiqueManager {
         
         this.init();
     }
+	toTitleCase(str) {
+        if (!str) return '';
+        return str.replace(
+            /\w\S*/g,
+            (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        );
+    }
 
     async init() {
         await this.loadCategories();
@@ -302,7 +309,7 @@ class BoutiqueManager {
                         </div>
                     </div>
                     <div class="card-body d-flex flex-column">
-                        <h6 class="card-title">${product.name}</h6>
+                        <h6 class="card-title">${this.toTitleCase(product.name)}</h6>
                         <p class="card-text text-muted small">${product.short_description || ''}</p>
                         <div class="price-section mt-auto pt-2">
                             ${priceHTML}

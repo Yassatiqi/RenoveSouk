@@ -76,7 +76,8 @@ class Product(db.Model):
             'is_new': self.is_new,
             'image_url': self.image_url,
             'category_id': self.category_id,
-            'category_name': self.category.name if self.category else None
+            'category_name': self.category.name if self.category else None,
+            'category_slug': self.category.slug if self.category else None
         }
         
         if include_details:

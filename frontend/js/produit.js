@@ -332,15 +332,18 @@ class ProductDetailManager {
 
     // Charge les produits similaires
     async loadRelatedProducts() {
-        if (!this.product || !this.product.category_id) return;
-
+		if (!this.product || !this.product.category_slug) {
+			console.warn("Impossible de charger les produits similaires : category_slug manquant.");
+			return;
+		}
         try {
-            const response = await fetch(`${this.apiBaseUrl}/api/products?category=${this.product.category_name}&per_page=4`);
+            //const response = await fetch(`${this.apiBaseUrl}/api/products?category=${this.product.category_name}&per_page=4`);
+			const response = await fetch(`${this.apiBaseUrl}/api/products?category=${this.product.category_slug}&per_page=5`);
             if (!response.ok) return;
 
             const data = await response.json();
             const relatedProducts = data.products.filter(p => p.id !== this.product.id).slice(0, 4);
-            
+			
             if (relatedProducts.length > 0) {
                 this.renderRelatedProducts(relatedProducts);
                 document.getElementById('related-products-section').style.display = 'block';
@@ -368,7 +371,7 @@ class ProductDetailManager {
                              style="height: 200px; object-fit: cover;"
                              onerror="this.onerror=null;this.src='../assets/images/placeholder.jpg';">
                         <div class="card-body d-flex flex-column">
-                            <h6 class="card-title">${product.name}</h6>
+                            <h6 class="card-title">${this.toTitleCase(product.name)}</h6>
                             <div class="price-section mt-auto">
                                 <span class="text-primary fw-bold">${product.price.toFixed(2)} MAD</span>
                             </div>

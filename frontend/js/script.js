@@ -137,7 +137,7 @@ function createProductCard(product) {
                     </div>
                 </div>
                 <div class="card-body d-flex flex-column">
-                    <h6 class="card-title">${product.name}</h6>
+                    <h6 class="card-title">${this.toTitleCase(product.name)}</h6>
                     <div class="price-section mt-auto pt-2">${priceHTML}</div>
                 </div>
             </div>
