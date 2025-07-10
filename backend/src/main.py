@@ -281,12 +281,25 @@ def get_order_by_number(order_number):
 
 @app.route('/api/admin/orders', methods=['GET'])
 def admin_get_orders():
-    """Récupère toutes les commandes pour le panel admin."""
+    """Récupère les commandes pour le panel admin, avec un filtre de statut optionnel."""
     try:
-        orders = Order.query.order_by(Order.created_at.desc()).all()
+        # Récupérer le paramètre de filtre depuis l'URL (ex: ?status=pending)
+        status_filter = request.args.get('status')
+        
+        # Commencer avec la requête de base
+        query = Order.query
+
+        # Appliquer le filtre s'il est présent et non vide
+        if status_filter:
+            query = query.filter(Order.status == status_filter)
+        
+        # Trier par les plus récentes
+        orders = query.order_by(Order.created_at.desc()).all()
+        
         orders_data = [o.to_dict(include_items=True) for o in orders]
         return jsonify({'success': True, 'orders': orders_data})
     except Exception as e:
+        db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
        
        
@@ -440,7 +453,78 @@ def admin_update_order_status(order_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
-        
+ 
+ 
+@app.route('/api/admin/categories', methods=['GET'])
+def admin_get_categories():
+    """Récupère toutes les catégories pour le panel admin."""
+    try:
+        categories = Category.query.order_by(Category.name.asc()).all()
+        return jsonify({'success': True, 'categories': [c.to_dict() for c in categories]})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/admin/categories', methods=['POST'])
+def admin_create_category():
+    """Crée une nouvelle catégorie."""
+    data = request.get_json()
+    if not data or 'name' not in data:
+        return jsonify({'success': False, 'message': 'Le nom est requis'}), 400
+    
+    try:
+        slug = create_slug(data['name'])
+        # Vérifier si le slug existe déjà
+        if Category.query.filter_by(slug=slug).first():
+            return jsonify({'success': False, 'message': 'Cette catégorie existe déjà.'}), 409
+
+        new_category = Category(
+            name=data['name'],
+            slug=slug,
+            description=data.get('description', ''),
+            icon=data.get('icon', 'fas fa-tag')
+        )
+        db.session.add(new_category)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Catégorie créée.', 'category': new_category.to_dict()}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/admin/categories/<int:category_id>', methods=['PUT'])
+def admin_update_category(category_id):
+    """Met à jour une catégorie existante."""
+    category = Category.query.get_or_404(category_id)
+    data = request.get_json()
+    
+    try:
+        category.name = data.get('name', category.name)
+        category.slug = create_slug(data.get('name', category.name))
+        category.description = data.get('description', category.description)
+        category.icon = data.get('icon', category.icon)
+        category.is_active = data.get('is_active', category.is_active)
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Catégorie mise à jour.', 'category': category.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/admin/categories/<int:category_id>', methods=['DELETE'])
+def admin_delete_category(category_id):
+    """Supprime une catégorie."""
+    category = Category.query.get_or_404(category_id)
+    # Sécurité : ne pas supprimer si des produits y sont associés
+    if category.products:
+        return jsonify({'success': False, 'message': 'Impossible de supprimer, des produits sont associés à cette catégorie.'}), 400
+    
+    try:
+        db.session.delete(category)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Catégorie supprimée.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+ 
 # ==============================================================================
 # --- GESTION DES ERREURS ET LANCEMENT DE L'APP ---
 # ==============================================================================

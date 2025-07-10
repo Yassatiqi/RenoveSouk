@@ -58,6 +58,22 @@ class AdminPanel {
 					this.showOrderDetailsModal(order);
 				}
 			}
+			if (button.classList.contains('btn-filter-order')) {
+				const status = button.dataset.status;
+				// On appelle loadOrders avec le statut sur lequel on a cliqué
+				this.loadOrders(status);
+			}
+			if (button.classList.contains('btn-add-category')) {
+				this.showCategoryModal();
+			}
+			if (button.classList.contains('btn-edit-category')) {
+				const categoryId = button.dataset.id;
+				this.showCategoryModal(categoryId);
+			}
+			if (button.classList.contains('btn-delete-category')) {
+				const categoryId = button.dataset.id;
+				this.deleteCategory(categoryId);
+			}
 		});
 
 		// 2. ÉCOUTEUR POUR LES "CHANGEMENTS" (ajouté pour les menus de statut)
@@ -96,6 +112,9 @@ class AdminPanel {
                     break;
 				case 'orders':
 					await this.loadOrders();
+					break;
+				case 'categories':
+					await this.loadCategories();
 					break;
                 default:
                     contentArea.innerHTML = `<div class="alert alert-info">Section "${section}" non encore implémentée.</div>`;
@@ -368,14 +387,21 @@ class AdminPanel {
 	}
 
 	
-	async loadOrders() {
+	async loadOrders(status = '') {
 		try {
-			const response = await fetch(`${this.apiBaseUrl}/api/admin/orders`);
+			// Construire l'URL avec le filtre si nécessaire
+			let url = `${this.apiBaseUrl}/api/admin/orders`;
+			if (status) {
+				url += `?status=${status}`;
+			}
+
+			const response = await fetch(url);
 			if (!response.ok) throw new Error('Réponse du serveur non valide');
+
 			const data = await response.json();
 			if (data.success) {
-				this.orders = data.orders || []; // Stocker les commandes
-				this.renderOrdersList(data.orders || []);
+				this.orders = data.orders || []; 
+				this.renderOrdersList(this.orders);
 			} else {
 				throw new Error(data.message);
 			}
@@ -387,9 +413,10 @@ class AdminPanel {
 
 	renderOrdersList(orders) {
 		const contentArea = document.getElementById('content-area');
-		const tableRows = orders.map(order => {	
+
+		// La logique pour créer les lignes du tableau (tableRows) reste exactement la même
+		const tableRows = orders.map(order => {
 			const orderDate = new Date(order.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-			
 			const statuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 			const statusOptions = statuses.map(s => 
 				`<option value="${s}" ${order.status === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
@@ -400,23 +427,39 @@ class AdminPanel {
 					<td><strong>${order.order_number}</strong></td>
 					<td>${order.shipping_first_name} ${order.shipping_last_name}</td>
 					<td>${order.total_amount.toFixed(2)} MAD</td>
-					
-					<!-- Colonne du statut modifiée -->
 					<td>
 						<select class="form-select form-select-sm status-select" data-order-id="${order.id}">
 							${statusOptions}
 						</select>
 					</td>
-
 					<td>${orderDate}</td>
 					<td><button class="btn btn-sm btn-outline-primary btn-view-order" data-order-id="${order.id}"><i class="fas fa-eye me-1"></i>Détails</button></td>
 				</tr>
 			`;
 		}).join('');
 
+		// ** CORRECTION APPLIQUÉE ICI : On ajoute le bloc de boutons de filtre **
+		const filterButtonsHTML = `
+			<div class="mb-3">
+				<div class="btn-group" role="group" aria-label="Filtres de statut">
+					<button type="button" class="btn btn-secondary btn-filter-order" data-status="">Toutes</button>
+					<button type="button" class="btn btn-warning btn-filter-order" data-status="pending">En attente</button>
+					<button type="button" class="btn btn-info btn-filter-order" data-status="confirmed">Confirmées</button>
+					<button type="button" class="btn btn-primary btn-filter-order" data-status="shipped">Expédiées</button>
+					<button type="button" class="btn btn-success btn-filter-order" data-status="delivered">Livrées</button>
+					<button type="button" class="btn btn-danger btn-filter-order" data-status="cancelled">Annulées</button>
+				</div>
+			</div>
+		`;
+
+		// On injecte le code HTML final avec les filtres
 		contentArea.innerHTML = `
 			<div class="table-container p-4">
 				<h5 class="fw-bold mb-3">Gestion des Commandes</h5>
+				
+				<!-- On insère les boutons de filtre juste ici -->
+				${filterButtonsHTML}
+				
 				<div class="table-responsive">
 					<table class="table table-hover">
 						<thead>
@@ -535,6 +578,149 @@ class AdminPanel {
 			this.showNotification(`Erreur: ${error.message}`, 'danger');
 		}
 	}
+	
+	// --- LOGIQUE SPÉCIFIQUE AUX CATÉGORIES ---
+
+	async loadCategories() {
+		try {
+			const response = await fetch(`${this.apiBaseUrl}/api/admin/categories`);
+			const data = await response.json();
+			if (data.success) {
+				this.categories = data.categories; // On stocke pour les modales
+				this.renderCategoriesList();
+			} else { throw new Error(data.message); }
+		} catch (error) {
+			console.error('Erreur chargement catégories:', error);
+			document.getElementById('content-area').innerHTML = '<div class="alert alert-danger">Erreur de chargement des catégories.</div>';
+		}
+	}
+
+	renderCategoriesList() {
+		const tableRows = this.categories.map(cat => `
+			<tr>
+				<td><i class="${cat.icon || 'fas fa-tag'}"></i></td>
+				<td><strong>${cat.name}</strong></td>
+				<td><code>${cat.slug}</code></td>
+				<td><span class="badge bg-info">${cat.product_count}</span></td>
+				<td>
+					<div class="btn-group">
+						<button class="btn btn-sm btn-primary btn-edit-category" data-id="${cat.id}"><i class="fas fa-edit"></i></button>
+						<button class="btn btn-sm btn-danger btn-delete-category" data-id="${cat.id}" ${cat.product_count > 0 ? 'disabled' : ''}><i class="fas fa-trash"></i></button>
+					</div>
+				</td>
+			</tr>
+		`).join('');
+
+		document.getElementById('content-area').innerHTML = `
+			<div class="table-container p-4">
+				<div class="d-flex justify-content-between align-items-center mb-3">
+					<h5 class="fw-bold mb-0">Gestion des Catégories</h5>
+					<button class="btn btn-success btn-add-category"><i class="fas fa-plus me-1"></i>Ajouter</button>
+				</div>
+				<table class="table table-hover">
+					<thead><tr><th>Icône</th><th>Nom</th><th>Slug</th><th>Produits</th><th>Actions</th></tr></thead>
+					<tbody>${tableRows.length > 0 ? tableRows : '<tr><td colspan="5" class="text-center">Aucune catégorie.</td></tr>'}</tbody>
+				</table>
+			</div>
+		`;
+	}
+
+	showCategoryModal(categoryId = null) {
+		const isEditMode = categoryId !== null;
+		const category = isEditMode ? this.categories.find(c => c.id == categoryId) : {};
+		
+		const modalHTML = `
+			<div class="modal fade" id="categoryModal" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">${isEditMode ? 'Modifier' : 'Ajouter'} une Catégorie</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+						</div>
+						<div class="modal-body">
+							<form id="categoryForm">
+								<div class="mb-3">
+									<label for="cat-name" class="form-label">Nom de la catégorie *</label>
+									<input type="text" class="form-control" id="cat-name" value="${category.name || ''}" required>
+								</div>
+								<div class="mb-3">
+									<label for="cat-icon" class="form-label">Icône (classe Font Awesome)</label>
+									<input type="text" class="form-control" id="cat-icon" value="${category.icon || 'fas fa-tag'}" placeholder="ex: fas fa-tools">
+									<small class="form-text">Trouvez des icônes sur <a href="https://fontawesome.com/search?o=r&m=free" target="_blank">Font Awesome</a>.</small>
+								</div>
+								<div class="mb-3">
+									<label for="cat-desc" class="form-label">Description</label>
+									<textarea class="form-control" id="cat-desc" rows="3">${category.description || ''}</textarea>
+								</div>
+							</form>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+							<button type="submit" form="categoryForm" class="btn btn-primary">Sauvegarder</button>
+						</div>
+					</div>
+				</div>
+			</div>`;
+
+		const oldModal = document.getElementById('categoryModal');
+		if (oldModal) oldModal.remove();
+		document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+		const modalElement = document.getElementById('categoryModal');
+		const modal = new bootstrap.Modal(modalElement);
+		modal.show();
+		
+		document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+			e.preventDefault();
+			await this.saveCategory(categoryId);
+			modal.hide();
+		});
+	}
+
+	async saveCategory(categoryId = null) {
+		const isEditMode = categoryId !== null;
+		const url = isEditMode 
+			? `${this.apiBaseUrl}/api/admin/categories/${categoryId}`
+			: `${this.apiBaseUrl}/api/admin/categories`;
+		const method = isEditMode ? 'PUT' : 'POST';
+
+		const data = {
+			name: document.getElementById('cat-name').value,
+			icon: document.getElementById('cat-icon').value,
+			description: document.getElementById('cat-desc').value,
+		};
+
+		try {
+			const response = await fetch(url, {
+				method,
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data),
+			});
+			const result = await response.json();
+			if(result.success) {
+				this.showNotification(result.message, 'success');
+				this.loadCategories();
+			} else { throw new Error(result.message); }
+		} catch(error) {
+			this.showNotification(`Erreur: ${error.message}`, 'danger');
+		}
+	}
+
+	async deleteCategory(categoryId) {
+		if (!confirm('Voulez-vous vraiment supprimer cette catégorie ?')) return;
+
+		try {
+			const response = await fetch(`${this.apiBaseUrl}/api/admin/categories/${categoryId}`, { method: 'DELETE' });
+			const result = await response.json();
+			if (result.success) {
+				this.showNotification(result.message, 'success');
+				this.loadCategories();
+			} else { throw new Error(result.message); }
+		} catch(error) {
+			this.showNotification(`Erreur: ${error.message}`, 'danger');
+		}
+	}
+	
 	// Affiche une notification
     showNotification(message, type = 'success') {
         const alertContainer = document.createElement('div');

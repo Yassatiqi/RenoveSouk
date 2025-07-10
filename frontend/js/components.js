@@ -44,7 +44,53 @@ class ComponentLoader {
         ]);
     }
 
-    // Initialise les liens relatifs selon la page
+    async initializeDynamicCategories() {
+        try {
+            // S'assurer que le header est chargé avant d'essayer de le manipuler
+            await new Promise(resolve => {
+                if (document.getElementById('nav-categories-dropdown')) {
+                    resolve();
+                } else {
+                    document.addEventListener('component-loaded-header', resolve, { once: true });
+                }
+            });
+
+            const response = await fetch(`${API_BASE_URL}/api/categories`);
+            if (!response.ok) throw new Error('Impossible de charger les catégories');
+
+            const categories = await response.json();
+
+            const searchCategoryEl = document.getElementById('search-category');
+            const navDropdownEl = document.getElementById('nav-categories-dropdown');
+            
+            if (!searchCategoryEl || !navDropdownEl) return;
+            
+            let searchOptionsHTML = '<option value="">Toutes Catégories</option>';
+            let navDropdownHTML = '';
+
+            categories.forEach(cat => {
+                // Option pour la barre de recherche
+                searchOptionsHTML += `<option value="${cat.slug}">${cat.name}</option>`;
+                // Lien pour le menu de navigation principal
+                navDropdownHTML += `<li><a class="dropdown-item" href="/pages/boutique.html?category=${cat.slug}"><i class="${cat.icon || 'fas fa-tag'} me-2"></i>${cat.name}</a></li>`;
+            });
+            
+            // Vider les anciens placeholders et injecter le nouveau HTML
+            searchCategoryEl.innerHTML = searchOptionsHTML;
+            // Pour le menu dropdown, on l'insère avant les deux derniers éléments (le séparateur et le lien "tout voir")
+            const divider = navDropdownEl.querySelector('.dropdown-divider');
+            if (divider) {
+                navDropdownEl.insertAdjacentHTML('afterbegin', navDropdownHTML);
+            } else {
+                navDropdownEl.innerHTML = navDropdownHTML;
+            }
+            
+        } catch (error) {
+            console.error("Erreur lors de l'initialisation des catégories dynamiques:", error);
+        }
+    }
+	
+	// Initialise les liens relatifs selon la page
 /*    initializeLinks() {
         const isInPagesFolder = window.location.pathname.includes('/pages/');
         
@@ -169,6 +215,7 @@ class ComponentLoader {
         //this.initializeLinks();
         this.initializeSearch();
         this.initializeNewsletter();
+		this.initializeDynamicCategories();
     }
 }
 
