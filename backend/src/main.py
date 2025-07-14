@@ -473,8 +473,28 @@ def admin_toggle_product_status(product_id):
  
 @app.route('/api/admin/stats')
 def admin_stats():
-    # ... (le code des statistiques reste le même) ...
-    return jsonify({'total_orders': 0, 'total_products': 0, 'total_customers': 0})
+    """Get admin statistics as JSON"""
+    try:
+        # On utilise des requêtes `count()` qui sont très efficaces
+        stats = {
+            'products_count': Product.query.count(),
+            'categories_count': Category.query.count(),
+            'orders_count': Order.query.count(),
+            'users_count': User.query.count(),
+            'active_products': Product.query.filter_by(is_active=True).count(),
+            'featured_products': Product.query.filter_by(is_featured=True).count(),
+            'out_of_stock': Product.query.filter(Product.stock <= 0).count(),
+            
+            # Bonus : Calcul du chiffre d'affaires total
+            # On somme le `total_amount` de toutes les commandes livrées ou expédiées
+            'total_revenue': db.session.query(func.sum(Order.total_amount)).filter(
+                Order.status.in_(['shipped', 'delivered'])
+            ).scalar() or 0.0
+        }
+        return jsonify(stats)
+    except Exception as e:
+        # En cas d'erreur, on renvoie une réponse claire
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/admin/orders/<int:order_id>/status', methods=['PATCH'])
 def admin_update_order_status(order_id):

@@ -14,8 +14,131 @@ class AdminPanel {
     async init() {
         this.setupEventListeners();
         // Démarrer sur la section produits pour se concentrer sur le CRUD
-        this.showSection('products'); 
+        this.showSection('dashboard'); 
     }
+	
+	async loadDashboard() {
+		try {
+			// Appel à la nouvelle route API
+			const statsResponse = await fetch(`${this.apiBaseUrl}/api/admin/stats`);
+			const stats = await statsResponse.json();
+
+			// Appel pour les commandes et produits récents
+			const ordersResponse = await fetch(`${this.apiBaseUrl}/api/admin/orders?status=pending`);
+			const ordersData = await ordersResponse.json();
+			const recentOrders = ordersData.success ? ordersData.orders.slice(0, 5) : [];
+
+			const productsResponse = await fetch(`${this.apiBaseUrl}/api/admin/products`);
+			const productsData = await productsResponse.json();
+			const recentProducts = productsData.success ? productsData.products.slice(0, 5) : [];
+
+			this.renderDashboard(stats, recentOrders, recentProducts);
+
+		} catch (error) {
+			console.error('Erreur chargement dashboard:', error);
+			document.getElementById('content-area').innerHTML = '<div class="alert alert-danger">Erreur de chargement du tableau de bord.</div>';
+		}
+	}
+	renderDashboard(stats, recentOrders, recentProducts) {
+		const contentArea = document.getElementById('content-area');
+		
+		const recentOrdersHTML = recentOrders.map(o => `
+			<tr>
+				<td><a href="#" class="fw-bold" onclick="event.preventDefault(); adminPanel.showOrderDetailsModal(${JSON.stringify(o).replace(/"/g, '"')})">${o.order_number}</a></td>
+				<td>${o.shipping_first_name} ${o.shipping_last_name}</td>
+				<td>${o.total_amount.toFixed(2)} MAD</td>
+				<td><span class="badge bg-warning">${o.status}</span></td>
+			</tr>
+		`).join('');
+
+		const recentProductsHTML = recentProducts.map(p => `
+			 <tr>
+				<td>${p.id}</td>
+				<td>${p.name}</td>
+				<td>${p.price.toFixed(2)} MAD</td>
+				<td><span class="badge bg-${p.is_active ? 'success' : 'secondary'}">${p.is_active ? 'Actif' : 'Inactif'}</span></td>
+			</tr>
+		`).join('');
+		
+		contentArea.innerHTML = `
+			<!-- Cartes de statistiques -->
+			<div class="row g-4 mb-4">
+				<div class="col-md-3">
+					<div class="card stats-card h-100">
+						<div class="card-body d-flex justify-content-between align-items-center">
+							<div>
+								<h6 class="card-subtitle mb-2 text-white-50">Total Commandes</h6>
+								<h2 class="card-title fw-bold">${stats.orders_count || 0}</h2>
+							</div>
+							<i class="fas fa-shopping-cart fa-3x opacity-50"></i>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					 <div class="card stats-card h-100" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+						<div class="card-body d-flex justify-content-between align-items-center">
+							<div>
+								<h6 class="card-subtitle mb-2 text-white-50">Total Produits</h6>
+								<h2 class="card-title fw-bold">${stats.products_count || 0}</h2>
+							</div>
+							<i class="fas fa-box fa-3x opacity-50"></i>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="card stats-card h-100" style="background: linear-gradient(135deg, #e67e22, #f39c12);">
+						<div class="card-body d-flex justify-content-between align-items-center">
+							<div>
+								<h6 class="card-subtitle mb-2 text-white-50">Chiffre d'Affaires</h6>
+								<h2 class="card-title fw-bold">${(stats.total_revenue || 0).toFixed(2)}</h2>
+								<small class="text-white-50">MAD</small>
+							</div>
+							<i class="fas fa-dollar-sign fa-3x opacity-50"></i>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="card stats-card h-100" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+						 <div class="card-body d-flex justify-content-between align-items-center">
+							<div>
+								<h6 class="card-subtitle mb-2 text-white-50">Clients</h6>
+								<h2 class="card-title fw-bold">${stats.users_count || 0}</h2>
+							</div>
+							<i class="fas fa-users fa-3x opacity-50"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Tableaux récents -->
+			<div class="row g-4">
+				<div class="col-lg-7">
+					<div class="table-container p-4">
+						<h5 class="fw-bold mb-3">Commandes en attente</h5>
+						<div class="table-responsive">
+							<table class="table table-hover">
+								<thead><tr><th>N°</th><th>Client</th><th>Total</th><th>Statut</th></tr></thead>
+								<tbody>${recentOrdersHTML || '<tr><td colspan="4" class="text-center">Aucune commande en attente.</td></tr>'}</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-5">
+					<div class="table-container p-4">
+						<h5 class="fw-bold mb-3">Produits Récents</h5>
+						<div class="table-responsive">
+							<table class="table table-hover">
+								<thead><tr><th>ID</th><th>Nom</th><th>Prix</th><th>Statut</th></tr></thead>
+								<tbody>${recentProductsHTML || '<tr><td colspan="4" class="text-center">Aucun produit.</td></tr>'}</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		`;
+		// Exposer l'instance du panel pour que le onclick fonctionne
+		window.adminPanel = this;
+	}
 
 	// Configure les écouteurs d'événements
 	setupEventListeners() {
@@ -107,6 +230,9 @@ class AdminPanel {
         
         try {
             switch (section) {
+				case 'dashboard':
+					await this.loadDashboard();
+					break;
                 case 'products':
                     await this.loadProducts();
                     break;
