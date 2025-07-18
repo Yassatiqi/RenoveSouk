@@ -1,4 +1,10 @@
 class HeaderComponent extends HTMLElement {
+	constructor() {
+		super();
+		this.API_BASE_URL = "http://localhost:5001";
+		this.initializeCart();
+	}
+
 	async connectedCallback() {
 		this.innerHTML = /*html*/ `
             <!-- Top Bar -->
@@ -138,12 +144,125 @@ class HeaderComponent extends HTMLElement {
 
 		this.initializeSearch();
 		await this.initializeDynamicCategories();
+		this.cart.updateDisplay();
 
 		document.dispatchEvent(
 			new CustomEvent("component-loaded-header", {
 				detail: { componentName: "header", element: this },
 			}),
 		);
+	}
+
+	initializeCart() {
+		this.cart = {
+			getItems: () => JSON.parse(localStorage.getItem("renovsoukCart")) || [],
+
+			saveItems: (items) => {
+				localStorage.setItem("renovsoukCart", JSON.stringify(items));
+				// Déclencher un événement personnalisé chaque fois que le panier est sauvegardé
+				// Cela permettra à d'autres parties du site (comme la page panier) de réagir.
+				document.dispatchEvent(new Event("cartUpdated"));
+			},
+
+			addItem: (productId, quantity = 1) => {
+				const items = this.cart.getItems();
+				const existingItem = items.find((item) => item.id === productId);
+
+				if (existingItem) {
+					existingItem.quantity += quantity;
+				} else {
+					items.push({ id: productId, quantity: quantity });
+				}
+
+				this.cart.saveItems(items);
+				this.cart.updateDisplay(); // Mettre à jour immédiatement l'affichage
+				this.cart.showNotification(
+					`${quantity} produit(s) ajouté(s) au panier !`,
+				);
+			},
+
+			updateDisplay: async () => {
+				const items = this.cart.getItems();
+				const cartBadge = this.querySelector("#cart-count");
+				const cartTotalEl = this.querySelector("#cart-total");
+
+				if (!cartBadge || !cartTotalEl) {
+					// Si les éléments du header ne sont pas encore chargés, on attend un peu et on réessaie.
+					// Cela peut arriver au premier chargement de la page.
+					setTimeout(() => this.cart.updateDisplay(), 100);
+					return;
+				}
+
+				// 1. Mettre à jour le nombre d'articles (INSTANTANÉ)
+				const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+				cartBadge.textContent = totalItems;
+
+				// 2. Animer le badge pour un effet visuel
+				cartBadge.classList.add("animate__animated", "animate__tada");
+				cartBadge.addEventListener(
+					"animationend",
+					() => {
+						cartBadge.classList.remove("animate__animated", "animate__tada");
+					},
+					{ once: true },
+				);
+
+				if (totalItems === 0) {
+					cartTotalEl.textContent = "0.00 MAD";
+					return;
+				}
+
+				// 3. Mettre à jour le montant total (ASYNCHRONE)
+				try {
+					const productIds = items.map((item) => item.id);
+					if (productIds.length === 0) return;
+
+					const response = await fetch(
+						`${this.API_BASE_URL}/api/products/by-ids`,
+						{
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ ids: productIds }),
+						},
+					);
+
+					if (!response.ok)
+						throw new Error("Erreur API pour le total du panier");
+					const productsDetails = await response.json();
+
+					let totalAmount = 0;
+					items.forEach((cartItem) => {
+						const productDetail = productsDetails.find(
+							(p) => p.id === cartItem.id,
+						);
+						if (productDetail) {
+							totalAmount += productDetail.price * cartItem.quantity;
+						}
+					});
+					cartTotalEl.textContent = `${totalAmount.toFixed(2)} MAD`;
+				} catch (error) {
+					console.error("Erreur calcul total panier:", error);
+					cartTotalEl.textContent = "Erreur";
+				}
+			},
+
+			showNotification: (message, type = "success") => {
+				const notificationContainer =
+					document.getElementById("notification-container") || document.body;
+				const notification = document.createElement("div");
+				notification.className = `alert alert-${type} position-fixed`;
+				notification.style.cssText = "top: 20px; right: 20px; z-index: 9999;";
+				notification.innerHTML = `<i class="fas fa-${type === "success" ? "check-circle" : type === "danger" ? "exclamation-circle" : "info"} me-2"></i> ${message}`;
+				notificationContainer.appendChild(notification);
+				setTimeout(() => {
+					notification.classList.add("fade");
+					setTimeout(() => notification.remove(), 500);
+				}, 3000);
+			},
+		};
+
+		// Exposer le panier globalement pour qu'il soit accessible depuis d'autres scripts
+		window.cart = this.cart;
 	}
 
 	initializeSearch() {
@@ -182,17 +301,13 @@ class HeaderComponent extends HTMLElement {
 
 	async initializeDynamicCategories() {
 		try {
-			console.log("loading dynamic categories");
-
-			const response = await fetch(`http://localhost:5001/api/categories`);
+			const response = await fetch(`${this.API_BASE_URL}/api/categories`);
 			if (!response.ok) throw new Error("Impossible de charger les catégories");
 
 			const categories = await response.json();
-			console.log(categories);
 
 			const searchCategoryEl = document.getElementById("search-category");
 			const navDropdownEl = document.getElementById("nav-categories-dropdown");
-			console.log(searchCategoryEl, navDropdownEl);
 
 			if (!searchCategoryEl || !navDropdownEl) return;
 
