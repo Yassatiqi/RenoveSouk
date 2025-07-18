@@ -1,10 +1,4 @@
-// Fichier: frontend/js/script.js
-// Version: 1.7 - Cart logic moved to header component
-
-// ==============================================================================
-// --- CONSTANTES ET CONFIGURATION ---
-// ==============================================================================
-const API_BASE_URL = "http://localhost:5001"; // CORRECTION: Port 5001
+const API_BASE_URL = "http://localhost:5001";
 
 // ==============================================================================
 // --- FONCTIONS DE GÉNÉRATION HTML ---
@@ -13,9 +7,11 @@ function createProductCard(product) {
 	const imageUrl = product.image_url?.startsWith("/static/")
 		? `${API_BASE_URL}${product.image_url}`
 		: product.image_url || "./assets/images/placeholder.jpg";
+
 	const placeholderImage = "./assets/images/placeholder.jpg";
 
 	let priceHTML = `<span class="current-price text-primary fw-bold">${product.price.toFixed(2)} MAD</span>`;
+
 	if (product.is_on_sale && product.original_price) {
 		priceHTML = `<span class="current-price text-primary fw-bold">${product.price.toFixed(2)} MAD</span> <span class="original-price text-muted text-decoration-line-through ms-2">${product.original_price.toFixed(2)} MAD</span>`;
 	}
