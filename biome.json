@@ -3,7 +3,17 @@
   "files": {
     "ignoreUnknown": false,
     "includes": [
-      "**",
+      "apps/web/**/*.{js,jsx,ts,tsx,json,jsonc}",
+      "*.{js,jsx,ts,tsx,json,jsonc}",
+      "!apps/api/**",
+      "!**/*.py",
+      "!**/*.pyc",
+      "!**/__pycache__/**",
+      "!**/venv/**",
+      "!**/env/**",
+      "!**/*.db",
+      "!**/*.sqlite",
+      "!**/requirements.txt",
       "!**/.next",
       "!**/dist",
       "!**/.turbo",
@@ -16,10 +26,9 @@
       "!bts.jsonc",
       "!**/.expo",
       "!**/.wrangler",
-      "!**/.source"
+      "!**/.source",
+      "!**/uploads/**"
     ]
   },
-  "extends": [
-    "ultracite"
-  ]
+  "extends": ["ultracite"]
 }

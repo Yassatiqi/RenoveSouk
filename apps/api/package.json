@@ -1,0 +1,13 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "python src/run_server.py",
+    "start": "python src/run_server.py",
+    "install": "python -m venv venv && ./venv/Scripts/activate && pip install -r requirements.txt",
+    "activate": ".\\venv\\Scripts\\activate"
+  },
+  "description": "Python Flask API backend for RenoveSouk marketplace"
+}
+    

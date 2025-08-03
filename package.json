@@ -10,9 +10,15 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "check-types": "turbo check-types",
-    "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
-    "dev:server": "turbo -F server dev"
+    "dev:api": "turbo -F api dev",
+    "install:api": "cd apps/api && python -m venv venv && ./venv/Scripts/activate && pip install -r requirements.txt",
+    "setup": "bun install && bun run install:api",
+    "start": "turbo start",
+    "start:web": "turbo -F web start",
+    "start:api": "turbo -F api start",
+    "format": "biome format --write .",
+    "lint": "biome lint ."
   },
   "dependencies": {},
   "devDependencies": {
