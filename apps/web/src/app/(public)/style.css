@@ -1,0 +1,13 @@
+#hero-section {
+  height: 100vh;
+  position: relative;
+
+  .hero-image {
+    object-fit: cover;
+    z-index: 1;
+  }
+}
+
+#categories-section {
+  height: 100vh;
+}
