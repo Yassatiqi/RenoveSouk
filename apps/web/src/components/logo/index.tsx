@@ -1,10 +1,13 @@
+import Link from 'next/link';
 import './style.css';
+import type { ComponentProps, FC } from 'react';
 
-export const MainLogo = () => {
+type Props = ComponentProps<'a'>;
+
+export const MainLogo: FC<Props> = ({ ...props }) => {
   return (
-    <div id="main-logo">
+    <Link href="/" id="main-logo" {...props}>
       <div> </div>
-      <h1>Logo</h1>
-    </div>
+    </Link>
   );
 };

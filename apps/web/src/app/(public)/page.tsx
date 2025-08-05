@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import "./style.css";
-import { MainHeader } from "@/widgets";
+import Image from 'next/image';
+import './style.css';
+import { MainHeader } from '@/widgets';
 
 export default function Home() {
   return (
