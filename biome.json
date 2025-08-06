@@ -38,5 +38,12 @@
         "useSortedAttributes": "off"
       }
     }
+  },
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noArrayIndexKey": "off"
+      }
+    }
   }
 }

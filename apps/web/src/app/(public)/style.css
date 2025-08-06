@@ -1,6 +1,11 @@
 #hero-section {
   height: 100vh;
+  min-width: fit-content;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-80);
 
   .hero-image {
     object-fit: cover;
