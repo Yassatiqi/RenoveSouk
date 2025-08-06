@@ -1,5 +1,5 @@
 #hero-carousel {
-  z-index: 2;
+  z-index: 1;
   width: 65vw;
 
   #hero-carousel-item {
@@ -29,7 +29,7 @@
     }
 
     .image-container {
-      --size: clamp(200px, 40vw, 400px);
+      --size: clamp(200px, 30vw, 400px);
       min-width: var(--size);
       height: var(--size);
       position: relative;

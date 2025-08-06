@@ -22,7 +22,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { Separator } from "@/components/ui/separator";
-import { categories, navLinks } from "./data";
+import { navLinks } from "./data";
 import { Badge } from "@/components/ui/badge";
 import {
   CommandDialog,
@@ -41,6 +41,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { categories } from "@/shared/data";
 
 export const MainHeader = () => {
   const [open, setOpen] = useState(false);

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import "./style.css";
-import { HeroCarousel, MainHeader } from "@/widgets";
+import { HeroCarousel, MainHeader, LandingPageCategories } from "@/widgets";
 
 export default function Home() {
   return (
@@ -19,6 +19,8 @@ export default function Home() {
           />
 
           <HeroCarousel />
+
+          <LandingPageCategories />
         </section>
 
         <section id="categories-section"> </section>
