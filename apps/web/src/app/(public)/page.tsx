@@ -6,6 +6,7 @@ import {
   LandingPageCategories,
   Features,
   OurProducts,
+  NewsLetter,
 } from "@/widgets";
 
 export default function Home() {
@@ -36,6 +37,10 @@ export default function Home() {
 
           <section id="products-section">
             <OurProducts />
+          </section>
+
+          <section id="newsletter-section">
+            <NewsLetter />
           </section>
         </div>
       </main>
