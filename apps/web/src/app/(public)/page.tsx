@@ -2,7 +2,12 @@
 
 import Image from "next/image";
 import "./style.css";
-import { HeroCarousel, MainHeader, LandingPageCategories } from "@/widgets";
+import {
+  HeroCarousel,
+  MainHeader,
+  LandingPageCategories,
+  Features,
+} from "@/widgets";
 
 export default function Home() {
   return (
@@ -23,7 +28,11 @@ export default function Home() {
           <LandingPageCategories />
         </section>
 
-        <section id="categories-section"> </section>
+        <div className="container" id="sections-container">
+          <section id="features-section">
+            <Features />
+          </section>
+        </div>
       </main>
 
       <footer> </footer>

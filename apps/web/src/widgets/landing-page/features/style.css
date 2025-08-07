@@ -1,0 +1,114 @@
+#features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, minmax(300px, 1fr));
+  gap: var(--spacing-14);
+
+  & .features-grid__item--tools {
+    grid-area: 1 / 1;
+  }
+
+  & .features-grid__item--plumbing {
+    grid-area: 1 / 2;
+  }
+
+  & .features-grid__item--paint {
+    grid-area: 2 / 1 / auto / span 2;
+  }
+}
+
+#features-card {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: none;
+  padding: 0;
+  background: transparent;
+
+  .background {
+    position: relative;
+    height: 100%;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 1;
+    }
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--spacing-56) var(--spacing-36);
+    gap: var(--spacing-10);
+
+    .features-grid__item--tools & {
+      align-items: center;
+      text-align: center;
+    }
+
+    .features-grid__item--plumbing &,
+    .features-grid__item--paint & {
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .badge {
+      background-color: var(--org-4);
+      color: var(--org-9);
+      border: none;
+    }
+
+    .title {
+      color: #fff;
+      font-weight: 600;
+      font-size: clamp(var(--spacing-18), 4vw, var(--spacing-40));
+    }
+
+    .description {
+      color: #fff;
+      font-size: clamp(var(--spacing-16), 2vw, var(--spacing-20));
+      max-width: 450px;
+    }
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+@media (width <= 640px) {
+  #features-grid {
+    padding-inline: var(--spacing-10);
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, minmax(250px, 1fr));
+    gap: 1rem;
+
+    .features-grid__item--tools {
+      grid-area: 1/1;
+    }
+
+    .features-grid__item--plumbing {
+      grid-area: 2/1;
+    }
+
+    .features-grid__item--paint {
+      grid-area: 3/1;
+    }
+
+    .content {
+      padding: 1.5rem 1rem;
+      gap: 0.5rem;
+      align-items: center !important;
+      text-align: center !important;
+    }
+  }
+}
