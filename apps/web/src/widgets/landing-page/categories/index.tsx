@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export const LandingPageCategories = () => {
   return (
-    <div id="landing-categories-section" className="container">
+    <div id="landing-categories-section">
       <h2>Choisissez votre catégorie</h2>
       <div className="categories-grid">
         {categories.map((category, index) => {
