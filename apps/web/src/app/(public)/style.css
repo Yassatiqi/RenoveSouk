@@ -7,7 +7,7 @@
   gap: clamp(var(--spacing-28), 5vw, var(--spacing-80));
 
   .hero-image {
-    min-height: 140vh;
+    min-height: calc(100vh + 30px);
     object-fit: cover;
     z-index: 1;
     user-select: none;
@@ -21,4 +21,8 @@
   display: grid;
   gap: var(--spacing-44);
   padding-bottom: var(--spacing-56);
+
+  > * {
+    width: 100%;
+  }
 }
