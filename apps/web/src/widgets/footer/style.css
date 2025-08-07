@@ -1,0 +1,112 @@
+.footer {
+  --radius: clamp(var(--spacing-28), 10vw, var(--spacing-80));
+
+  background-color: var(--org-2);
+  padding: var(--spacing-32) clamp(var(--spacing-36), 10vw, var(--spacing-128));
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+
+  .footer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .footer-tagline {
+      max-width: 330px;
+    }
+
+    @media (width <= 768px) {
+      justify-content: start;
+      gap: var(--spacing-10);
+    }
+  }
+
+  .footer-separator {
+    margin-block: var(--spacing-24);
+  }
+
+  .footer-middle {
+    display: flex;
+    justify-content: space-between;
+
+    .footer-sections {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-20);
+
+      .footer-section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-10);
+
+        h3 {
+          font-size: var(--spacing-20);
+          color: var(--org-11);
+        }
+
+        ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          font-size: 14px;
+
+          li {
+            margin-bottom: var(--spacing-4);
+          }
+
+          a {
+            color: inherit;
+            text-decoration: none;
+          }
+        }
+      }
+
+      .contact-section {
+        .contact-item {
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-4);
+        }
+      }
+    }
+
+    .footer-social {
+      display: flex;
+      gap: var(--spacing-8);
+      align-items: center;
+      margin-left: auto;
+    }
+
+    @media (width <= 768px) {
+      flex-direction: column;
+    }
+  }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+
+    @media (width <= 768px) {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .footer-bottom-links {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-8);
+
+      a {
+        &:hover {
+          color: var(--org-11);
+        }
+      }
+
+      span {
+        color: var(--gray-5);
+      }
+    }
+  }
+}

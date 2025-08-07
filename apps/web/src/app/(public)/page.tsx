@@ -7,6 +7,7 @@ import {
   Features,
   OurProducts,
   NewsLetter,
+  Footer,
 } from "@/widgets";
 
 export default function Home() {
@@ -45,7 +46,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer> </footer>
+      <Footer />
     </>
   );
 }

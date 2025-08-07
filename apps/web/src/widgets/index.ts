@@ -1,3 +1,4 @@
+export { Footer } from "./footer";
 export { OurProducts } from "./landing-page/our-products";
 export { ProductCard } from "./product-card";
 export { LandingPageCategories } from "./landing-page/categories";
