@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import { content } from "./data";
 import "./style.css";

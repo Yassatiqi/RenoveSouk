@@ -87,7 +87,6 @@
 
 @media (width <= 640px) {
   #features-grid {
-    padding-inline: var(--spacing-10);
     grid-template-columns: 1fr;
     grid-template-rows: repeat(3, minmax(250px, 1fr));
     gap: 1rem;
