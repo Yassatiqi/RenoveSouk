@@ -1,5 +1,4 @@
 #hero-section {
-  min-height: 100vh;
   min-width: fit-content;
   position: relative;
   display: flex;
@@ -8,7 +7,7 @@
   gap: clamp(var(--spacing-28), 5vw, var(--spacing-80));
 
   .hero-image {
-    max-height: 100vh;
+    min-height: 140vh;
     object-fit: cover;
     z-index: 1;
     user-select: none;
@@ -17,12 +16,9 @@
 
 #sections-container {
   margin-inline: auto;
-  padding-inline: var(--spacing-24);
+  margin-top: var(--spacing-40);
+  padding-inline: var(--spacing-10);
   display: grid;
   gap: var(--spacing-44);
   padding-bottom: var(--spacing-56);
-}
-
-#features-section {
-  padding-top: var(--spacing-28);
 }
