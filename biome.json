@@ -1,0 +1,49 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "apps/web/**/*.{js,jsx,ts,tsx,json,jsonc}",
+      "*.{js,jsx,ts,tsx,json,jsonc}",
+      "!apps/api/**",
+      "!**/*.py",
+      "!**/*.pyc",
+      "!**/__pycache__/**",
+      "!**/venv/**",
+      "!**/env/**",
+      "!**/*.db",
+      "!**/*.sqlite",
+      "!**/requirements.txt",
+      "!**/.next",
+      "!**/dist",
+      "!**/.turbo",
+      "!**/dev-dist",
+      "!**/.zed",
+      "!**/.vscode",
+      "!**/routeTree.gen.ts",
+      "!**/src-tauri",
+      "!**/.nuxt",
+      "!bts.jsonc",
+      "!**/.expo",
+      "!**/.wrangler",
+      "!**/.source",
+      "!**/uploads/**"
+    ]
+  },
+  "extends": ["ultracite"],
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off",
+        "useSortedAttributes": "off"
+      }
+    }
+  },
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noArrayIndexKey": "off"
+      }
+    }
+  }
+}

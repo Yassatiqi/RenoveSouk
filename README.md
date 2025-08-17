@@ -1,246 +1,168 @@
-# RenoveSouk
-RenoveSouk
-Guide d'Installation RenovSouk
-Installation en Développement
-1. Prérequis
-Python 3.11 ou supérieur
-pip3
-Navigateur web moderne
-2. Installation des Dépendances Backend
-cd backend
+# RenoveSouk - Marketplace for Renovation Materials
 
-pip3 install flask flask-sqlalchemy flask-cors flask-migrate werkzeug
-3. Démarrage du Backend
-cd backend/src
+A full-stack marketplace application for renovation materials built with Next.js frontend and Python Flask backend.
 
-python3.11 run_server.py
+## Architecture
 
-Le serveur backend sera accessible sur http://localhost:5001
-4. Démarrage du Frontend
-cd frontend
+This is a monorepo managed by Turborepo containing:
 
-python3.11 -m http.server 8080
+- **Frontend** (`apps/web`): Next.js 15 with TypeScript, Tailwind CSS, and shadcn/ui
+- **Backend** (`apps/api`): Python Flask API with SQLAlchemy and SQLite
 
-Le site sera accessible sur http://localhost:8080
-5. Accès aux Interfaces
-Site client : http://localhost:8080
-Administration : http://localhost:8080/admin/
-Installation en Production
-1. Prérequis Serveur
-Ubuntu 20.04+ ou CentOS 8+
-Python 3.11+
-PostgreSQL 13+
-Nginx
-Certificat SSL
-2. Configuration Base de Données
--- Créer la base de données
+## Features
 
-CREATE DATABASE renovsouk;
+### Frontend (Next.js)
 
-CREATE USER renovsouk_user WITH PASSWORD 'mot_de_passe_securise';
+- **TypeScript** - For type safety and improved developer experience
+- **Next.js 15** - Full-stack React framework with App Router
+- **TailwindCSS** - Utility-first CSS for rapid UI development
+- **shadcn/ui** - Reusable UI components
+- **React Query** - Server state management
+- **Next Themes** - Dark/light mode support
+- **Zod** - Schema validation
 
-GRANT ALL PRIVILEGES ON DATABASE renovsouk TO renovsouk_user;
-3. Configuration Backend Production
-Modifier backend/src/main.py :
+### Backend (Python Flask)
 
-# Configuration production
+- **Flask** - Lightweight web framework
+- **SQLAlchemy** - Database ORM
+- **Flask-Migrate** - Database migrations
+- **Flask-CORS** - Cross-origin resource sharing
+- **SQLite** - Development database
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://renovsouk_user:mot_de_passe@localhost/renovsouk'
+### Development Tools
 
-app.config['DEBUG'] = False
+- **Biome** - Fast linting and formatting
+- **Husky** - Git hooks for code quality
+- **Turborepo** - Optimized monorepo build system
+- **Bun** - Fast package manager and runtime
 
-app.config['SECRET_KEY'] = 'cle_secrete_production'
-4. Installation avec Gunicorn
-pip3 install gunicorn
+## Getting Started
 
-cd backend/src
+### Prerequisites
 
-gunicorn -w 4 -b 0.0.0.0:5001 main:app
-5. Configuration Nginx
-server {
+- **Node.js** (v18 or higher)
+- **Bun** (v1.2.17 or higher)
+- **Python** (v3.11 or higher)
+- **Git**
 
-    listen 80;
+### Installation
 
-    server_name votre-domaine.com;
+1. **Clone the repository:**
 
-    
+```bash
+git clone https://github.com/Yassatiqi/RenoveSouk.git
+cd RenoveSouk
+```
 
-    # Redirection HTTPS
+2. **Install all dependencies:**
 
-    return 301 https://$server_name$request_uri;
+**For Windows:**
 
-}
+```bash
+bun run setup
+```
 
-server {
+This will:
 
-    listen 443 ssl;
+- Install Node.js dependencies with Bun
+- Create Python virtual environment
+- Install Python dependencies
 
-    server_name votre-domaine.com;
+### Manual Setup (Alternative)
 
-    
+If the automatic setup doesn't work:
 
-    ssl_certificate /path/to/certificate.crt;
+1. **Install Node.js dependencies:**
 
-    ssl_certificate_key /path/to/private.key;
+```bash
+bun install
+```
 
-    
+2. **Setup Python environment:**
 
-    # Frontend
+**Windows:**
 
-    location / {
+```bash
+cd apps/api
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-        root /path/to/renovsouk-final/frontend;
+### Development
 
-        index index.html;
+**Start all services (recommended):**
 
-        try_files $uri $uri/ =404;
+```bash
+bun dev
+```
 
-    }
+This will start:
 
-    
+- Next.js frontend on [http://localhost:3001](http://localhost:3001)
+- Flask API on [http://localhost:5001](http://localhost:5001)
 
-    # API Backend
+**Start services individually:**
 
-    location /api/ {
+```bash
+# Frontend only
+bun dev:web
 
-        proxy_pass http://localhost:5001;
+# Backend only
+bun dev:api
+```
 
-        proxy_set_header Host $host;
+## Project Structure
 
-        proxy_set_header X-Real-IP $remote_addr;
+```
+RenoveSouk/
+├── apps/
+│   ├── web/                 # Next.js Frontend
+│   │
+│   └── api/                 # Python Flask Backend
+│
+├── biome.json              # Linting & formatting config
+├── turbo.json             # Turborepo configuration
+├── package.json           # Root package configuration
+└── README.md
+```
 
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+## Available Scripts
 
-        proxy_set_header X-Forwarded-Proto $scheme;
+### Root Level Scripts
 
-    }
+| Script            | Description                                |
+| ----------------- | ------------------------------------------ |
+| `bun dev`         | Start all applications in development mode |
+| `bun build`       | Build all applications for production      |
+| `bun setup`       | Install all dependencies (Windows)         |
+| `bun dev:web`     | Start only the frontend application        |
+| `bun dev:api`     | Start only the backend API                 |
+| `bun start`       | Start all applications in production mode  |
+| `bun check-types` | Check TypeScript types across all apps     |
+| `bun check`       | Run Biome formatting and linting           |
+| `bun format`      | Format code with Biome                     |
+| `bun lint`        | Lint code with Biome                       |
 
-    
+### Python Virtual Environment
 
-    # Assets statiques
+**Activate Python environment:**
 
-    location /static/ {
+**Windows:**
 
-        alias /path/to/renovsouk-final/backend/static/;
+```bash
+cd apps/api
+.\venv\Scripts\activate
+```
 
-        expires 30d;
+**Install new Python packages:**
 
-        add_header Cache-Control "public, immutable";
+```bash
+# After activating virtual environment
+pip install package_name
+pip freeze > requirements.txt  # Update requirements
+```
 
-    }
+## Database
 
-}
-6. Service Systemd
-Créer /etc/systemd/system/renovsouk.service :
-
-[Unit]
-
-Description=RenovSouk Backend
-
-After=network.target
-
-[Service]
-
-User=www-data
-
-Group=www-data
-
-WorkingDirectory=/path/to/renovsouk-final/backend/src
-
-Environment=PATH=/usr/bin/python3.11
-
-ExecStart=/usr/local/bin/gunicorn -w 4 -b 127.0.0.1:5001 main:app
-
-Restart=always
-
-[Install]
-
-WantedBy=multi-user.target
-
-Activer le service :
-
-sudo systemctl enable renovsouk
-
-sudo systemctl start renovsouk
-Configuration des URLs API
-Développement
-Les fichiers JavaScript utilisent http://localhost:5001 par défaut.
-Production
-Modifier dans tous les fichiers JS :
-
-// Remplacer
-
-this.apiBaseUrl = 'http://localhost:5001';
-
-// Par
-
-this.apiBaseUrl = 'https://votre-domaine.com';
-
-Fichiers à modifier :
-
-frontend/js/boutique.js
-frontend/js/produit.js
-frontend/js/panier.js
-frontend/js/checkout.js
-frontend/js/confirmation.js
-frontend/admin/js/admin.js
-Sauvegarde et Maintenance
-Sauvegarde Base de Données
-# PostgreSQL
-
-pg_dump renovsouk > backup_$(date +%Y%m%d).sql
-
-# SQLite (développement)
-
-cp backend/database/renovsouk.db backup_$(date +%Y%m%d).db
-Logs
-# Logs application
-
-tail -f /var/log/renovsouk/app.log
-
-# Logs Nginx
-
-tail -f /var/log/nginx/access.log
-
-tail -f /var/log/nginx/error.log
-Monitoring
-Surveiller l'espace disque
-Monitorer les performances de la base de données
-Vérifier les certificats SSL
-Contrôler les logs d'erreurs
-Dépannage
-Problèmes Courants
-Backend ne démarre pas
-# Vérifier les dépendances
-
-pip3 list | grep -E "(flask|sqlalchemy)"
-
-# Vérifier les ports
-
-netstat -tlnp | grep 5001
-
-# Logs détaillés
-
-python3.11 run_server.py --debug
-Frontend ne charge pas les données
-Vérifier que le backend fonctionne : curl http://localhost:5001/api/products
-Vérifier les URLs dans les fichiers JS
-Contrôler la console navigateur (F12)
-Erreurs CORS
-Vérifier la configuration CORS dans main.py :
-
-CORS(app, origins=["http://localhost:8080", "https://votre-domaine.com"])
-Base de données corrompue
-# Supprimer et recréer (développement)
-
-rm backend/database/renovsouk.db
-
-python3.11 run_server.py  # Recrée automatiquement
-Support
-Pour toute assistance technique :
-
-Consulter les logs d'erreur
-Vérifier la configuration réseau
-Tester les endpoints API individuellement
-Contacter l'équipe de développement
-
+The application uses SQLite for development with the following features:

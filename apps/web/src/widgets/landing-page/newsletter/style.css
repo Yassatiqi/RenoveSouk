@@ -1,0 +1,50 @@
+#newsletter {
+  --padding: var(--spacing-16);
+
+  display: flex;
+  align-items: center;
+  height: 280px;
+  padding: var(--padding);
+  background: var(--org-2);
+  position: relative;
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+
+  img {
+    object-fit: cover;
+    object-position: top;
+    padding: var(--padding);
+    border-radius: var(--radius-lg);
+  }
+
+  .content {
+    display: grid;
+    gap: var(--spacing-8);
+    padding-inline: var(--spacing-32);
+    z-index: 2;
+
+    h4 {
+      font-size: clamp(var(--spacing-16), 3vw, var(--spacing-36));
+      font-weight: 600;
+    }
+
+    .newsletter-form {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-8);
+
+      input {
+        background: #fff;
+      }
+
+      @media (width <=480px) {
+        flex-direction: column;
+
+        button {
+          align-self: flex-start;
+        }
+      }
+    }
+  }
+}

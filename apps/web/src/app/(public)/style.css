@@ -1,0 +1,28 @@
+#hero-section {
+  min-width: fit-content;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(var(--spacing-28), 5vw, var(--spacing-80));
+
+  .hero-image {
+    min-height: calc(100vh + 30px);
+    object-fit: cover;
+    z-index: 1;
+    user-select: none;
+  }
+}
+
+#sections-container {
+  margin-inline: auto;
+  margin-top: var(--spacing-40);
+  padding-inline: var(--spacing-10);
+  display: grid;
+  gap: var(--spacing-44);
+  padding-bottom: var(--spacing-56);
+
+  > * {
+    width: 100%;
+  }
+}
